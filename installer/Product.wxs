@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  DebateForge WiX v4 Installer Definition
+  Build: wix build Product.wxs -o ../dist/DebateForge-Setup.msi
+-->
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package
+    Name="DebateForge"
+    Version="1.0.0.0"
+    Manufacturer="DebateForge Team"
+    UpgradeCode="A3D7F2E1-9B4C-4E8A-B6D5-1C0F7A3E9D42"
+    Scope="perMachine"
+    Language="1033"
+    Codepage="1252"
+    InstallerVersion="500">
+
+    <SummaryInformation
+      Description="DebateForge - AI-Powered Debate Arena"
+      Manufacturer="DebateForge Team" />
+
+    <!-- Major upgrade: removes older versions before installing -->
+    <MajorUpgrade
+      DowngradeErrorMessage="A newer version of DebateForge is already installed. Please uninstall it first."
+      AllowSameVersionUpgrades="yes" />
+
+    <!-- Embed the cabinet into the MSI -->
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Application icon shown in Add/Remove Programs -->
+    <Icon Id="DebateForgeIcon" SourceFile="../assets/icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="DebateForgeIcon" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/debateforge/debateforge" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/debateforge/debateforge" />
+
+    <!-- Desktop shortcut checkbox property (default: checked) -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="CREATE_DESKTOP_SHORTCUT" Value="1" />
+
+    <!-- ================================================================== -->
+    <!-- Directory Structure                                                 -->
+    <!-- ================================================================== -->
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="DebateForge">
+        <!-- App files installed here -->
+        <Directory Id="ResourcesDir" Name="resources" />
+        <Directory Id="LocalesDir" Name="locales" />
+        <Directory Id="PersonasDir" Name="personas" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="DebateForgeStartMenuFolder" Name="DebateForge" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <!-- ================================================================== -->
+    <!-- Components: Main Application Files                                  -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="AppComponents" Directory="INSTALLFOLDER">
+
+      <!-- Main executable -->
+      <Component Id="MainExecutable" Guid="B1C2D3E4-F5A6-4789-0123-456789ABCDEF">
+        <File Id="DebateForgeExe"
+              Source="../dist/DebateForge.exe"
+              KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut"
+                    Directory="DebateForgeStartMenuFolder"
+                    Name="DebateForge"
+                    Description="AI-Powered Debate Arena"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="DebateForgeIcon"
+                    Advertise="yes" />
+        </File>
+      </Component>
+
+      <!-- Desktop shortcut (optional, controlled by property) -->
+      <Component Id="DesktopShortcutComponent" Guid="C2D3E4F5-A6B7-4890-1234-56789ABCDEF0" Directory="DesktopFolder">
+        <Condition>CREATE_DESKTOP_SHORTCUT</Condition>
+        <RegistryValue
+          Root="HKCU"
+          Key="Software\DebateForge"
+          Name="DesktopShortcut"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+        <Shortcut Id="DesktopShortcut"
+                  Name="DebateForge"
+                  Description="AI-Powered Debate Arena"
+                  Target="[INSTALLFOLDER]DebateForge.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="DebateForgeIcon" />
+        <RemoveFolder Id="RemoveDesktopShortcut" On="uninstall" />
+      </Component>
+
+      <!-- Start Menu folder cleanup on uninstall -->
+      <Component Id="StartMenuFolderCleanup" Guid="D3E4F5A6-B7C8-4901-2345-6789ABCDEF01" Directory="DebateForgeStartMenuFolder">
+        <RegistryValue
+          Root="HKCU"
+          Key="Software\DebateForge"
+          Name="StartMenuFolder"
+          Type="integer"
+          Value="1"
+          KeyPath="yes" />
+        <RemoveFolder Id="RemoveStartMenuFolder" Directory="DebateForgeStartMenuFolder" On="uninstall" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Components: Electron Runtime and Dependencies                       -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="ElectronRuntime" Directory="INSTALLFOLDER">
+
+      <Component Id="ElectronDlls" Guid="E4F5A6B7-C8D9-4012-3456-789ABCDEF012">
+        <File Source="../dist/chrome_100_percent.pak" />
+        <File Source="../dist/chrome_200_percent.pak" />
+        <File Source="../dist/d3dcompiler_47.dll" />
+        <File Source="../dist/ffmpeg.dll" />
+        <File Source="../dist/icudtl.dat" />
+        <File Source="../dist/libEGL.dll" />
+        <File Source="../dist/libGLESv2.dll" />
+        <File Source="../dist/LICENSE.electron.txt" />
+        <File Source="../dist/LICENSES.chromium.html" />
+        <File Source="../dist/resources.pak" />
+        <File Source="../dist/snapshot_blob.bin" />
+        <File Source="../dist/v8_context_snapshot.bin" />
+        <File Source="../dist/vk_swiftshader.dll" />
+        <File Source="../dist/vk_swiftshader_icd.json" />
+        <File Source="../dist/vulkan-1.dll" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Components: Resources (app.asar and related)                        -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="ResourceComponents" Directory="ResourcesDir">
+
+      <Component Id="AppAsar" Guid="F5A6B7C8-D9E0-4123-4567-89ABCDEF0123">
+        <File Source="../dist/resources/app.asar" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Components: Persona Library (pre-built JSON files)                  -->
+    <!-- ================================================================== -->
+    <ComponentGroup Id="PersonaComponents" Directory="PersonasDir">
+
+      <Component Id="PersonaDrEmpirica" Guid="A6B7C8D9-E0F1-4234-5678-9ABCDEF01234">
+        <File Source="../personas/dr-empirica.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PersonaConstitutionalOriginalist" Guid="B7C8D9E0-F1A2-4345-6789-ABCDEF012345">
+        <File Source="../personas/constitutional-originalist.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PersonaUtilitarianPhilosopher" Guid="C8D9E0F1-A2B3-4456-789A-BCDEF0123456">
+        <File Source="../personas/utilitarian-philosopher.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PersonaDevilsAdvocate" Guid="D9E0F1A2-B3C4-4567-89AB-CDEF01234567">
+        <File Source="../personas/devils-advocate.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PersonaDataSkeptic" Guid="E0F1A2B3-C4D5-4678-9ABC-DEF012345678">
+        <File Source="../personas/data-skeptic.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PersonaPolicyWonk" Guid="F1A2B3C4-D5E6-4789-ABCD-EF0123456789">
+        <File Source="../personas/policy-wonk.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PersonaFiscalConservative" Guid="A2B3C4D5-E6F7-4890-BCDE-F01234567890">
+        <File Source="../personas/fiscal-conservative.json" KeyPath="yes" />
+      </Component>
+
+      <Component Id="PersonaProgressiveActivist" Guid="B3C4D5E6-F7A8-4901-CDEF-012345678901">
+        <File Source="../personas/progressive-activist.json" KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- ================================================================== -->
+    <!-- Feature Tree                                                        -->
+    <!-- ================================================================== -->
+    <Feature Id="MainApplication" Title="DebateForge" Description="The DebateForge application and all required files." Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="AppComponents" />
+      <ComponentGroupRef Id="ElectronRuntime" />
+      <ComponentGroupRef Id="ResourceComponents" />
+    </Feature>
+
+    <Feature Id="PersonaLibrary" Title="Persona Library" Description="Pre-built debate persona definitions." Level="1" AllowAbsent="yes">
+      <ComponentGroupRef Id="PersonaComponents" />
+    </Feature>
+
+    <!-- ================================================================== -->
+    <!-- UI Reference (use built-in WixUI_InstallDir dialog set)             -->
+    <!-- ================================================================== -->
+    <UIRef Id="WixUI_InstallDir" />
+
+    <!-- License agreement -->
+    <WixVariable Id="WixUILicenseRtf" Value="../assets/license.rtf" />
+
+  </Package>
+
+</Wix>

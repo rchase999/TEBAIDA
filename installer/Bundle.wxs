@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  DebateForge Burn Bootstrapper Bundle
+  Checks for and installs prerequisites, then chains the MSI.
+  Build: wix build Bundle.wxs -o ../dist/DebateForge-Setup.exe
+-->
+
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Bundle
+    Name="DebateForge"
+    Version="1.0.0.0"
+    Manufacturer="DebateForge Team"
+    UpgradeCode="F8E7D6C5-B4A3-4291-8076-5E4D3C2B1A09"
+    IconSourceFile="../assets/icon.ico"
+    AboutUrl="https://github.com/debateforge/debateforge"
+    HelpUrl="https://github.com/debateforge/debateforge/issues"
+    DisableModify="yes">
+
+    <!-- ================================================================== -->
+    <!-- Bootstrapper UI                                                     -->
+    <!-- Use the standard WiX bootstrapper application (WixStdBA)            -->
+    <!-- ================================================================== -->
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication
+        LicenseUrl="https://opensource.org/licenses/MIT"
+        Theme="hyperlinkLicense"
+        LogoFile="../assets/logo.png"
+        SuppressOptionsUI="yes" />
+    </BootstrapperApplication>
+
+    <!-- ================================================================== -->
+    <!-- Variables                                                           -->
+    <!-- ================================================================== -->
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles6432Folder]DebateForge" />
+
+    <!-- ================================================================== -->
+    <!-- Prerequisite Detection: .NET 8.0 Desktop Runtime                    -->
+    <!-- ================================================================== -->
+
+    <!--
+      Detect .NET 8.0 Desktop Runtime (x64).
+      The runtime writes its version to a well-known registry key.
+    -->
+    <util:RegistrySearch
+      Id="DotNet8DesktopRuntimeSearch"
+      Root="HKLM"
+      Key="SOFTWARE\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App"
+      Value="8.0.0"
+      Variable="DotNet8DesktopRuntimeInstalled"
+      Result="exists" />
+
+    <!-- ================================================================== -->
+    <!-- Prerequisite Detection: Visual C++ Redistributable (x64)            -->
+    <!-- ================================================================== -->
+
+    <!--
+      Detect Visual C++ 2015-2022 Redistributable (x64).
+      The redistributable writes its install status to a registry key.
+    -->
+    <util:RegistrySearch
+      Id="VCRedistSearch"
+      Root="HKLM"
+      Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64"
+      Value="Installed"
+      Variable="VCRedistInstalled"
+      Result="value"
+      Condition="NOT VersionNT64" />
+
+    <util:RegistrySearch
+      Id="VCRedistSearch64"
+      Root="HKLM"
+      Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64"
+      Value="Installed"
+      Variable="VCRedistInstalled"
+      Result="value"
+      Condition="VersionNT64" />
+
+    <!-- ================================================================== -->
+    <!-- Chain: Install prerequisites, then the MSI                          -->
+    <!-- ================================================================== -->
+    <Chain>
+
+      <!-- ============================================================== -->
+      <!-- 1. .NET 8.0 Desktop Runtime (x64) — downloaded if not present   -->
+      <!-- ============================================================== -->
+      <ExePackage
+        Id="DotNet8DesktopRuntime"
+        Name="dotnet-desktop-runtime-8.0.12-win-x64.exe"
+        DownloadUrl="https://download.visualstudio.microsoft.com/download/pr/dotnet-desktop-runtime-8.0.12-win-x64.exe"
+        InstallCommand="/install /quiet /norestart"
+        RepairCommand="/repair /quiet /norestart"
+        UninstallCommand="/uninstall /quiet /norestart"
+        PerMachine="yes"
+        DetectCondition="DotNet8DesktopRuntimeInstalled"
+        InstallCondition="NOT DotNet8DesktopRuntimeInstalled"
+        Vital="yes"
+        Permanent="yes">
+
+        <ExitCode Value="0" Behavior="success" />
+        <ExitCode Value="1641" Behavior="scheduleReboot" />
+        <ExitCode Value="3010" Behavior="scheduleReboot" />
+      </ExePackage>
+
+      <!-- ============================================================== -->
+      <!-- 2. Visual C++ 2015-2022 Redistributable (x64)                   -->
+      <!-- ============================================================== -->
+      <ExePackage
+        Id="VCRedist"
+        Name="vc_redist.x64.exe"
+        DownloadUrl="https://aka.ms/vs/17/release/vc_redist.x64.exe"
+        InstallCommand="/install /quiet /norestart"
+        RepairCommand="/repair /quiet /norestart"
+        UninstallCommand="/uninstall /quiet /norestart"
+        PerMachine="yes"
+        DetectCondition="VCRedistInstalled = 1"
+        InstallCondition="NOT (VCRedistInstalled = 1)"
+        Vital="yes"
+        Permanent="yes">
+
+        <ExitCode Value="0" Behavior="success" />
+        <ExitCode Value="1641" Behavior="scheduleReboot" />
+        <ExitCode Value="3010" Behavior="scheduleReboot" />
+      </ExePackage>
+
+      <!-- ============================================================== -->
+      <!-- 3. DebateForge MSI — the main application                       -->
+      <!-- ============================================================== -->
+      <MsiPackage
+        Id="DebateForgeMsi"
+        SourceFile="DebateForge-Setup.msi"
+        Vital="yes"
+        DisplayInternalUI="no"
+        Visible="yes">
+
+        <!-- Pass install folder to the MSI -->
+        <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        <MsiProperty Name="CREATE_DESKTOP_SHORTCUT" Value="1" />
+
+      </MsiPackage>
+
+    </Chain>
+
+  </Bundle>
+
+</Wix>
