@@ -4,7 +4,7 @@ import {
   Play, Pause, Square, PanelRightOpen, PanelRightClose,
   ExternalLink, AlertTriangle, ChevronRight, RotateCcw,
   Gavel, Crown, Shield, Swords, ChevronDown, ChevronUp, MessageSquare,
-  Download, Copy, CheckCheck,
+  Download, Copy, CheckCheck, Repeat, Clock, Users,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -614,6 +614,61 @@ const DebateView: React.FC = () => {
     }
   }, [generateTranscriptMarkdown]);
 
+  /* ── Feature 7: Quick Rematch (swap sides) ── */
+  const handleQuickRematch = useCallback(() => {
+    if (!currentDebate) return;
+    const prop = currentDebate.debaters.find((d) => d.position === 'proposition');
+    const opp = currentDebate.debaters.find((d) => d.position === 'opposition');
+    const housemaster = currentDebate.debaters.find((d) => d.position === 'housemaster');
+    if (!prop || !opp) return;
+
+    // Swap sides: proposition becomes opposition and vice versa
+    const swappedDebaters = currentDebate.debaters.map((d) => {
+      if (d.id === prop.id) return { ...d, position: 'opposition' as const, name: opp.name };
+      if (d.id === opp.id) return { ...d, position: 'proposition' as const, name: prop.name };
+      return d;
+    });
+
+    const rematch = {
+      ...currentDebate,
+      id: crypto.randomUUID?.() ?? `${Date.now()}-rematch`,
+      debaters: swappedDebaters,
+      turns: [],
+      status: 'in-progress' as const,
+      currentRound: 1,
+      currentDebaterIndex: 0,
+      currentPhase: currentDebate.format.turnSequence[0].phase,
+      scores: undefined,
+      userPostOpinion: undefined,
+      momentum: [],
+      comments: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setCurrentDebate(rematch);
+  }, [currentDebate, setCurrentDebate]);
+
+  /* ── Feature 8: Turn Timer ── */
+  const [turnElapsed, setTurnElapsed] = useState(0);
+  useEffect(() => {
+    if (!isGenerating) { setTurnElapsed(0); return; }
+    const start = Date.now();
+    const interval = setInterval(() => setTurnElapsed(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  /* ── Feature 9: Audience Voting ── */
+  const [audienceVotes, setAudienceVotes] = useState<{ for: number; against: number; undecided: number }>({ for: 0, against: 0, undecided: 0 });
+  const [showAudiencePanel, setShowAudiencePanel] = useState(false);
+
+  const handleAudienceVote = useCallback((side: 'for' | 'against' | 'undecided') => {
+    setAudienceVotes((prev) => ({ ...prev, [side]: prev[side] + 1 }));
+  }, []);
+
+  const handleAudienceReset = useCallback(() => {
+    setAudienceVotes({ for: 0, against: 0, undecided: 0 });
+  }, []);
+
   // Calculate momentum data from current turns
   const momentumData: MomentumPoint[] = useMemo(() => {
     if (!currentDebate || currentDebate.turns.length === 0) return [];
@@ -1136,6 +1191,11 @@ const DebateView: React.FC = () => {
 
               {!isCompleted && (
                 <>
+                  <Tooltip content="Audience voting panel">
+                    <Button variant="ghost" size="sm" onClick={() => setShowAudiencePanel((v) => !v)}>
+                      <Users className="h-4 w-4" />
+                    </Button>
+                  </Tooltip>
                   <Button variant="ghost" size="sm" onClick={handlePause} icon={isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}>
                     {isPaused ? 'Resume' : 'Pause'}
                   </Button>
@@ -1161,6 +1221,13 @@ const DebateView: React.FC = () => {
               debate={currentDebate}
             />
             <div className="flex items-center gap-2 shrink-0">
+              {/* Turn timer */}
+              {isGenerating && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-mono font-medium text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
+                  {Math.floor(turnElapsed / 60).toString().padStart(2, '0')}:{(turnElapsed % 60).toString().padStart(2, '0')}
+                </span>
+              )}
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Step {Math.min(currentStep + 1, totalSteps)} of {totalSteps}
               </span>
@@ -1606,6 +1673,41 @@ const DebateView: React.FC = () => {
           )}
         </div>
 
+        {/* Audience Voting Panel */}
+        {showAudiencePanel && (
+          <div className="border-t border-gray-200 bg-gradient-to-r from-blue-50 via-white to-rose-50 px-5 py-3 dark:border-surface-dark-3 dark:from-blue-950/10 dark:via-surface-dark-0 dark:to-rose-950/10">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Audience Vote</p>
+              <div className="flex items-center gap-2">
+                <button onClick={handleAudienceReset} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Reset</button>
+                <button onClick={() => setShowAudiencePanel(false)} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">Hide</button>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={() => handleAudienceVote('for')} className="flex-1 rounded-lg border-2 border-blue-200 bg-blue-50 px-3 py-2 text-center transition-all hover:border-blue-400 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:hover:border-blue-600">
+                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">{audienceVotes.for}</p>
+                <p className="text-xs text-blue-600 dark:text-blue-400">For</p>
+              </button>
+              <button onClick={() => handleAudienceVote('undecided')} className="flex-1 rounded-lg border-2 border-gray-200 bg-gray-50 px-3 py-2 text-center transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-surface-dark-4 dark:bg-surface-dark-2 dark:hover:border-surface-dark-3">
+                <p className="text-lg font-bold text-gray-700 dark:text-gray-300">{audienceVotes.undecided}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Undecided</p>
+              </button>
+              <button onClick={() => handleAudienceVote('against')} className="flex-1 rounded-lg border-2 border-rose-200 bg-rose-50 px-3 py-2 text-center transition-all hover:border-rose-400 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-900/20 dark:hover:border-rose-600">
+                <p className="text-lg font-bold text-rose-700 dark:text-rose-300">{audienceVotes.against}</p>
+                <p className="text-xs text-rose-600 dark:text-rose-400">Against</p>
+              </button>
+            </div>
+            {/* Vote bar */}
+            {(audienceVotes.for + audienceVotes.against + audienceVotes.undecided) > 0 && (
+              <div className="mt-2 flex h-2 overflow-hidden rounded-full">
+                <div className="bg-blue-400 transition-all" style={{ width: `${(audienceVotes.for / (audienceVotes.for + audienceVotes.against + audienceVotes.undecided)) * 100}%` }} />
+                <div className="bg-gray-300 transition-all dark:bg-gray-600" style={{ width: `${(audienceVotes.undecided / (audienceVotes.for + audienceVotes.against + audienceVotes.undecided)) * 100}%` }} />
+                <div className="bg-rose-400 transition-all" style={{ width: `${(audienceVotes.against / (audienceVotes.for + audienceVotes.against + audienceVotes.undecided)) * 100}%` }} />
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Bottom bar — active debate */}
         {!isCompleted && (
           <div className="border-t border-gray-200 bg-white px-5 py-3 dark:border-surface-dark-3 dark:bg-surface-dark-0">
@@ -1671,6 +1773,11 @@ const DebateView: React.FC = () => {
                   </Button>
                 </Tooltip>
                 {currentDebate && <ShareCardButtons debate={currentDebate} />}
+                <Tooltip content="Rematch with swapped sides">
+                  <Button variant="outline" size="sm" onClick={handleQuickRematch} icon={<Repeat className="h-4 w-4" />}>
+                    Rematch
+                  </Button>
+                </Tooltip>
                 <Button variant="outline" size="sm" onClick={() => { setCurrentView('setup'); }} icon={<RotateCcw className="h-4 w-4" />}>
                   New Debate
                 </Button>

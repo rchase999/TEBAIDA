@@ -10,6 +10,7 @@ import PersonaEditor from './views/PersonaEditor/index';
 import SettingsView from './views/SettingsView';
 import TournamentView from './views/TournamentView/index';
 import LeaderboardView from './views/LeaderboardView/index';
+import StatisticsView from './views/StatisticsView';
 import type { AppView as SidebarAppView } from './components/Sidebar';
 
 function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
@@ -66,6 +67,8 @@ export default function App() {
         return <TournamentView />;
       case 'leaderboard':
         return <LeaderboardView />;
+      case 'statistics':
+        return <StatisticsView />;
       default:
         return <HomeView />;
     }

@@ -410,6 +410,38 @@ const SettingsView: React.FC = () => {
             onChange={(v) => updateSettings({ autoSaveDebates: v })}
           />
         </Card>
+
+        {/* Language */}
+        <div className="mt-4">
+          <Card className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Debate Language</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Set the language for AI debate responses. Prompts will instruct models to respond in this language.
+                </p>
+              </div>
+              <select
+                value={(settings as any).language ?? 'en'}
+                onChange={(e) => updateSettings({ language: e.target.value } as any)}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-surface-dark-4 dark:bg-surface-dark-1 dark:text-gray-100"
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish (Espanol)</option>
+                <option value="fr">French (Francais)</option>
+                <option value="de">German (Deutsch)</option>
+                <option value="pt">Portuguese (Portugues)</option>
+                <option value="it">Italian (Italiano)</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh">Chinese (Mandarin)</option>
+                <option value="ar">Arabic</option>
+                <option value="hi">Hindi</option>
+                <option value="ru">Russian</option>
+              </select>
+            </div>
+          </Card>
+        </div>
       </section>
 
       {/* Data */}

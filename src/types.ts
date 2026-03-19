@@ -1,5 +1,5 @@
 // Debate formats
-export type DebateFormat = 'oxford-union';
+export type DebateFormat = 'oxford-union' | 'lincoln-douglas' | 'parliamentary';
 
 // Debate status
 export type DebateStatus = 'setup' | 'in-progress' | 'paused' | 'completed' | 'cancelled';
@@ -146,6 +146,8 @@ export interface Debate {
   userPostOpinion?: OpinionValue;
   momentum?: MomentumPoint[];
   comments?: UserComment[];
+  language?: string;
+  audienceVotes?: { for: number; against: number; undecided: number };
   createdAt: string;
   updatedAt: string;
 }
@@ -191,6 +193,7 @@ export interface AppSettings {
   fallacyDetectionEnabled: boolean;
   autoSaveDebates: boolean;
   streamingEnabled: boolean;
+  language?: string;
 }
 
 // Streaming chunk from model

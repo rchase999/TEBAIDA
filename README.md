@@ -459,9 +459,15 @@ DEBATEFORGE_GOOGLE_KEY=AI...
 - [x] Tournament mode — functional brackets with single-elimination & round-robin
 - [x] Voice synthesis — TTS with per-debater voice assignment (Web Speech API)
 - [x] Keyboard shortcuts — Space (pause), Enter (continue), Escape (stop), V (voice)
-- [ ] Audience mode — invite friends to vote on debate winners
-- [ ] Multilingual debate support
-- [ ] Plugin system for custom debate formats
+- [x] Audience mode — live voting panel with For/Against/Undecided tallying
+- [x] Multilingual debate support — 12 languages with prompt-level enforcement
+- [x] Custom debate formats — Lincoln-Douglas (1v1) and Parliamentary added
+- [x] Statistics dashboard — comprehensive analytics with model usage, fallacy stats, win rates
+- [x] Quick rematch — one-click restart with swapped sides
+- [x] Debate search — full-text search across all debates, models, personas, and content
+- [x] Turn timer — live elapsed time display during generation
+- [x] Auto-topic generator — 18 curated topics with random selection
+- [x] Format selection — choose Oxford Union, Lincoln-Douglas, or Parliamentary in setup
 - [ ] Linux and macOS builds
 
 ---

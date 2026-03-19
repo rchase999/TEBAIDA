@@ -11,9 +11,10 @@ import {
   Moon,
   ChevronLeft,
   BarChart3,
+  PieChart,
 } from 'lucide-react';
 
-export type AppView = 'home' | 'new-debate' | 'personas' | 'tournament' | 'leaderboard' | 'settings';
+export type AppView = 'home' | 'new-debate' | 'personas' | 'tournament' | 'leaderboard' | 'statistics' | 'settings';
 
 export interface SidebarProps {
   currentView: AppView;
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { id: 'personas', label: 'Personas', icon: Users },
   { id: 'tournament', label: 'Tournament', icon: Trophy },
   { id: 'leaderboard', label: 'Leaderboard', icon: BarChart3 },
+  { id: 'statistics', label: 'Statistics', icon: PieChart },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 

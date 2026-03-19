@@ -12,8 +12,8 @@ import { Select } from '../../components/Select';
 import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { ProgressBar } from '../../components/ProgressBar';
-import { OXFORD_UNION_FORMAT } from '../../../core/debate_engine/formats';
-import type { DebaterConfig, ModelConfig, Persona, OpinionValue } from '../../../types';
+import { DEBATE_FORMATS, OXFORD_UNION_FORMAT } from '../../../core/debate_engine/formats';
+import type { DebaterConfig, ModelConfig, Persona, OpinionValue, DebateFormat, DebateFormatConfig } from '../../../types';
 
 /* ------- constants ------- */
 
@@ -52,6 +52,27 @@ const TOPIC_SUGGESTIONS = [
   'Should gene editing in humans be permitted?',
 ];
 
+const MORE_TOPICS = [
+  'Should the death penalty be abolished worldwide?',
+  'Is nuclear energy the best solution to climate change?',
+  'Should voting be mandatory in democracies?',
+  'Are standardized tests an effective measure of intelligence?',
+  'Should billionaires be taxed at 70% or higher?',
+  'Is cancel culture a threat to free speech?',
+  'Should animal testing for medical research be banned?',
+  'Will cryptocurrency replace traditional banking?',
+  'Should autonomous weapons be banned by international treaty?',
+  'Is remote work better for society than office work?',
+  'Should social media companies be liable for user content?',
+  'Is space colonization a moral imperative?',
+];
+
+const FORMAT_OPTIONS: { value: DebateFormat; label: string; desc: string; turns: number; needsHousemaster: boolean }[] = [
+  { value: 'oxford-union', label: 'Oxford Union', desc: 'Classic 10-step structured debate with Housemaster', turns: 10, needsHousemaster: true },
+  { value: 'lincoln-douglas', label: 'Lincoln-Douglas', desc: '1v1 values-focused debate, direct confrontation', turns: 8, needsHousemaster: false },
+  { value: 'parliamentary', label: 'Parliamentary', desc: 'Speaker-managed debate with Government vs Opposition', turns: 8, needsHousemaster: true },
+];
+
 const CLOUD_MODELS: ModelConfig[] = [
   { id: 'claude-sonnet-4-20250514', provider: 'anthropic', name: 'claude-sonnet-4-20250514', displayName: 'Claude Sonnet 4', maxTokens: 8192, supportsStreaming: true },
   { id: 'claude-3-5-sonnet-20241022', provider: 'anthropic', name: 'claude-3-5-sonnet-20241022', displayName: 'Claude 3.5 Sonnet', maxTokens: 8192, supportsStreaming: true },
@@ -75,6 +96,8 @@ const SetupWizard: React.FC = () => {
   const [localModels, setLocalModels] = useState<ModelConfig[]>([]);
   const [loadingLocal, setLoadingLocal] = useState(false);
   const [preOpinion, setPreOpinion] = useState<OpinionValue | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<DebateFormat>('oxford-union');
+  const [showMoreTopics, setShowMoreTopics] = useState(false);
 
   const setupTopic = useStore((s) => s.setupTopic);
   const setSetupTopic = useStore((s) => s.setSetupTopic);
@@ -159,9 +182,15 @@ const SetupWizard: React.FC = () => {
   }, [step, setupTopic, setupDebaters, preOpinion]);
 
   const handleStart = () => {
-    // All three debaters (proposition, opposition, housemaster) are now user-configured
-    // Assign unique IDs and finalize names from persona if not customized
-    const finalDebaters: DebaterConfig[] = setupDebaters.map((d) => ({
+    const formatConfig: DebateFormatConfig = DEBATE_FORMATS[selectedFormat] ?? OXFORD_UNION_FORMAT;
+    const formatInfo = FORMAT_OPTIONS.find((f) => f.value === selectedFormat);
+
+    // Filter debaters based on format (Lincoln-Douglas doesn't need housemaster)
+    const relevantDebaters = formatInfo?.needsHousemaster
+      ? setupDebaters
+      : setupDebaters.filter((d) => d.position !== 'housemaster');
+
+    const finalDebaters: DebaterConfig[] = relevantDebaters.map((d) => ({
       ...d,
       id: d.id || uuidv4(),
       name: d.name || d.persona?.name || POSITION_LABELS[d.position] || 'Debater',
@@ -173,16 +202,17 @@ const SetupWizard: React.FC = () => {
     const debate = {
       id: uuidv4(),
       topic: setupTopic,
-      format: OXFORD_UNION_FORMAT,
+      format: formatConfig,
       status: 'in-progress' as const,
       debaters: finalDebaters,
       turns: [],
       currentRound: 1,
       currentDebaterIndex: 0,
-      currentPhase: OXFORD_UNION_FORMAT.turnSequence[0].phase,
+      currentPhase: formatConfig.turnSequence[0].phase,
       housemasterId,
       userPreOpinion: preOpinion ?? undefined,
       momentum: [],
+      language: settings.language ?? 'en',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -190,27 +220,67 @@ const SetupWizard: React.FC = () => {
     setCurrentView('debate');
   };
 
+  /* ------- Randomize topic ------- */
+  const handleRandomTopic = useCallback(() => {
+    const allTopics = [...TOPIC_SUGGESTIONS, ...MORE_TOPICS];
+    const random = allTopics[Math.floor(Math.random() * allTopics.length)];
+    setSetupTopic(random);
+  }, [setSetupTopic]);
+
   /* ------- Step 1: Topic ------- */
   const renderTopicStep = () => (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Choose a Topic</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Enter a debate topic or question, or pick one of our suggestions.</p>
+        <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Choose a Topic & Format</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Enter a debate topic, pick a suggestion, or generate a random one.</p>
       </div>
 
-      <textarea
-        value={setupTopic}
-        onChange={(e) => setSetupTopic(e.target.value)}
-        placeholder="e.g., Should artificial intelligence be regulated by international law?"
-        className={clsx(
-          'block w-full rounded-xl border bg-white px-4 py-3 text-base text-gray-900 shadow-sm transition-colors',
-          'placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-forge-500/30 focus:border-forge-500',
-          'dark:bg-surface-dark-1 dark:text-gray-100 dark:border-surface-dark-4 dark:placeholder:text-gray-500',
-          'border-gray-300 min-h-[100px] resize-none',
-        )}
-        rows={3}
-      />
+      {/* Format Selection */}
+      <div>
+        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Debate Format</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {FORMAT_OPTIONS.map((fmt) => (
+            <button
+              key={fmt.value}
+              onClick={() => setSelectedFormat(fmt.value)}
+              className={clsx(
+                'rounded-xl border-2 px-4 py-3 text-left transition-all',
+                selectedFormat === fmt.value
+                  ? 'border-forge-500 bg-forge-50 dark:border-forge-500 dark:bg-forge-900/20'
+                  : 'border-gray-200 hover:border-gray-300 dark:border-surface-dark-4 dark:hover:border-surface-dark-3',
+              )}
+            >
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{fmt.label}</p>
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{fmt.desc}</p>
+              <Badge variant="info" size="sm">{fmt.turns} turns</Badge>
+            </button>
+          ))}
+        </div>
+      </div>
 
+      {/* Topic Input */}
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Topic</p>
+          <Button variant="ghost" size="sm" onClick={handleRandomTopic} icon={<RefreshCw className="h-3.5 w-3.5" />}>
+            Random Topic
+          </Button>
+        </div>
+        <textarea
+          value={setupTopic}
+          onChange={(e) => setSetupTopic(e.target.value)}
+          placeholder="e.g., Should artificial intelligence be regulated by international law?"
+          className={clsx(
+            'block w-full rounded-xl border bg-white px-4 py-3 text-base text-gray-900 shadow-sm transition-colors',
+            'placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-forge-500/30 focus:border-forge-500',
+            'dark:bg-surface-dark-1 dark:text-gray-100 dark:border-surface-dark-4 dark:placeholder:text-gray-500',
+            'border-gray-300 min-h-[80px] resize-none',
+          )}
+          rows={2}
+        />
+      </div>
+
+      {/* Topic Suggestions */}
       <div>
         <div className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400">
           <Lightbulb className="h-4 w-4" />
@@ -232,7 +302,30 @@ const SetupWizard: React.FC = () => {
               {suggestion}
             </button>
           ))}
+          {showMoreTopics && MORE_TOPICS.map((suggestion) => (
+            <button
+              key={suggestion}
+              onClick={() => setSetupTopic(suggestion)}
+              className={clsx(
+                'rounded-lg border px-4 py-3 text-left text-sm transition-all',
+                'hover:border-forge-400 hover:bg-forge-50 dark:hover:border-forge-600 dark:hover:bg-forge-900/20',
+                setupTopic === suggestion
+                  ? 'border-forge-500 bg-forge-50 text-forge-700 dark:border-forge-500 dark:bg-forge-900/30 dark:text-forge-300'
+                  : 'border-gray-200 text-gray-700 dark:border-surface-dark-4 dark:text-gray-300',
+              )}
+            >
+              {suggestion}
+            </button>
+          ))}
         </div>
+        {!showMoreTopics && (
+          <button
+            onClick={() => setShowMoreTopics(true)}
+            className="mt-2 text-sm font-medium text-forge-600 hover:text-forge-700 dark:text-forge-400 dark:hover:text-forge-300"
+          >
+            Show more topics...
+          </button>
+        )}
       </div>
     </div>
   );

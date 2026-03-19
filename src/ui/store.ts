@@ -39,7 +39,7 @@ declare global {
 // ---------------------------------------------------------------------------
 // View type
 // ---------------------------------------------------------------------------
-export type AppView = 'home' | 'debate' | 'setup' | 'personas' | 'settings' | 'tournament' | 'leaderboard';
+export type AppView = 'home' | 'debate' | 'setup' | 'personas' | 'settings' | 'tournament' | 'leaderboard' | 'statistics';
 
 // ---------------------------------------------------------------------------
 // Theme type

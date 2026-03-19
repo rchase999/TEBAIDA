@@ -530,6 +530,21 @@ export class DebateEngine {
       '- When citing sources, use markdown links [Title](URL) or bracketed references [1].'
     );
 
+    // ── Language ──
+    const language = (debate as any).language;
+    if (language && language !== 'en') {
+      const LANG_NAMES: Record<string, string> = {
+        es: 'Spanish', fr: 'French', de: 'German', pt: 'Portuguese', it: 'Italian',
+        ja: 'Japanese', ko: 'Korean', zh: 'Chinese (Mandarin)', ar: 'Arabic', hi: 'Hindi', ru: 'Russian',
+      };
+      const langName = LANG_NAMES[language] ?? language;
+      sections.push(
+        `LANGUAGE REQUIREMENT:\n` +
+        `You MUST respond entirely in ${langName}. All argumentation, evidence presentation, and rhetoric must be in ${langName}. ` +
+        `Do not use English unless quoting a specific English-language source.`
+      );
+    }
+
     return sections.join('\n\n');
   }
 
@@ -570,4 +585,4 @@ function formatPhaseName(phase: DebatePhase): string {
   }
 }
 
-export { DEBATE_FORMATS, getFormatConfig, OXFORD_UNION_FORMAT, TURN_SEQUENCE } from './formats';
+export { DEBATE_FORMATS, getFormatConfig, OXFORD_UNION_FORMAT, LINCOLN_DOUGLAS_FORMAT, PARLIAMENTARY_FORMAT, TURN_SEQUENCE } from './formats';

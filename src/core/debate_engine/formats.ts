@@ -63,16 +63,93 @@ export const OXFORD_UNION_FORMAT: DebateFormatConfig = {
 };
 
 /**
- * Record of all available debate formats. Contains a single entry for backwards compatibility.
+ * Lincoln-Douglas format: 1v1 focused debate with values/criteria framework.
+ * 6 steps, no housemaster — direct confrontation.
  */
-export const DEBATE_FORMATS: Record<DebateFormat, DebateFormatConfig> = {
-  'oxford-union': OXFORD_UNION_FORMAT,
+export const LINCOLN_DOUGLAS_SEQUENCE: TurnStep[] = [
+  { phase: 'opening',            role: 'proposition' },   // Affirmative Constructive
+  { phase: 'cross-examination',  role: 'opposition' },    // Neg Cross-Examines Aff
+  { phase: 'opening',            role: 'opposition' },    // Negative Constructive
+  { phase: 'cross-examination',  role: 'proposition' },   // Aff Cross-Examines Neg
+  { phase: 'rebuttal',           role: 'proposition' },   // Affirmative Rebuttal
+  { phase: 'rebuttal',           role: 'opposition' },    // Negative Rebuttal
+  { phase: 'closing',            role: 'proposition' },   // Affirmative Closing
+  { phase: 'closing',            role: 'opposition' },    // Negative Closing
+];
+
+export const LINCOLN_DOUGLAS_FORMAT: DebateFormatConfig = {
+  id: 'lincoln-douglas',
+  name: 'Lincoln-Douglas',
+  description:
+    'A one-on-one debate format focused on values and philosophical frameworks. ' +
+    'Features direct cross-examination between debaters and structured constructive/rebuttal phases. ' +
+    'No housemaster — debaters directly confront each other.',
+  totalTurns: 8,
+  turnSequence: LINCOLN_DOUGLAS_SEQUENCE,
+  rules: [
+    'The Affirmative (Proposition) presents their case first with a values framework.',
+    'Cross-examination allows direct questioning of the opponent.',
+    'Rebuttals must address arguments raised in constructive speeches.',
+    'The Affirmative has the burden of proof — they must show the resolution is true.',
+    'Focus on value premises and criteria for evaluation.',
+    'No new arguments in closing statements.',
+    'Both sides should directly engage with the opponent\'s value framework.',
+    'Arguments should be grounded in logical reasoning and evidence.',
+  ],
 };
 
 /**
- * Returns the debate format config. Since there is only one format (Oxford Union),
- * the parameter is optional and exists for backwards compatibility.
+ * Parliamentary format: Fast-paced, speaker-focused debate.
+ * 6 steps with a Speaker (housemaster role) managing proceedings.
  */
-export function getFormatConfig(_format?: DebateFormat): DebateFormatConfig {
+export const PARLIAMENTARY_SEQUENCE: TurnStep[] = [
+  { phase: 'introduction',  role: 'housemaster' },   // Speaker opens
+  { phase: 'opening',       role: 'proposition' },    // Prime Minister's speech
+  { phase: 'opening',       role: 'opposition' },     // Leader of Opposition's speech
+  { phase: 'rebuttal',      role: 'proposition' },    // Member of Government's speech
+  { phase: 'rebuttal',      role: 'opposition' },     // Member of Opposition's speech
+  { phase: 'closing',       role: 'opposition' },     // Opposition Whip
+  { phase: 'closing',       role: 'proposition' },    // Government Whip
+  { phase: 'verdict',       role: 'housemaster' },    // Speaker's verdict
+];
+
+export const PARLIAMENTARY_FORMAT: DebateFormatConfig = {
+  id: 'parliamentary',
+  name: 'Parliamentary',
+  description:
+    'A speaker-focused debate format inspired by British Parliamentary debates. ' +
+    'Features a Speaker who manages proceedings, with Government and Opposition sides. ' +
+    'Fast-paced with emphasis on rhetoric, points of information, and direct engagement.',
+  totalTurns: 8,
+  turnSequence: PARLIAMENTARY_SEQUENCE,
+  rules: [
+    'The Speaker opens proceedings and introduces the motion.',
+    'The Prime Minister (Proposition) defines the motion and presents the Government case.',
+    'The Leader of Opposition directly rebuts and presents the counter-case.',
+    'Member speeches should extend the case and rebut the other side.',
+    'Whip speeches summarize and do NOT introduce new arguments.',
+    'Debaters should offer and accept Points of Information when appropriate.',
+    'The Speaker delivers a final verdict based on the quality of debate.',
+    'All speeches should be accessible and rhetorically engaging.',
+    'Ad hominem attacks and personal insults are strictly forbidden.',
+  ],
+};
+
+/**
+ * Record of all available debate formats.
+ */
+export const DEBATE_FORMATS: Record<DebateFormat, DebateFormatConfig> = {
+  'oxford-union': OXFORD_UNION_FORMAT,
+  'lincoln-douglas': LINCOLN_DOUGLAS_FORMAT,
+  'parliamentary': PARLIAMENTARY_FORMAT,
+};
+
+/**
+ * Returns the debate format config for the given format, defaulting to Oxford Union.
+ */
+export function getFormatConfig(format?: DebateFormat): DebateFormatConfig {
+  if (format && DEBATE_FORMATS[format]) {
+    return DEBATE_FORMATS[format];
+  }
   return OXFORD_UNION_FORMAT;
 }

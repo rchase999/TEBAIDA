@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import {
   Swords, Plus, ShieldCheck, Users, Cpu,
   AlertTriangle, Clock, BarChart3, Sparkles,
-  Trophy, Crown, Shield, TrendingUp,
+  Trophy, Crown, Shield, TrendingUp, Search, X,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { Button } from '../components/Button';
@@ -13,6 +13,8 @@ import type { Debate, DebateFormat, DebateStatus } from '../../types';
 
 const FORMAT_LABELS: Record<DebateFormat, string> = {
   'oxford-union': 'Oxford Union',
+  'lincoln-douglas': 'Lincoln-Douglas',
+  'parliamentary': 'Parliamentary',
 };
 
 const STATUS_VARIANT: Record<DebateStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
@@ -50,6 +52,17 @@ const HomeView: React.FC = () => {
   const setCurrentView = useStore((s) => s.setCurrentView);
   const setCurrentDebate = useStore((s) => s.setCurrentDebate);
   const resetSetup = useStore((s) => s.resetSetup);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredDebates = useMemo(() => {
+    if (!searchQuery.trim()) return debates;
+    const q = searchQuery.toLowerCase();
+    return debates.filter((d) =>
+      d.topic?.toLowerCase().includes(q) ||
+      d.debaters?.some((db) => db.name?.toLowerCase().includes(q) || db.model?.displayName?.toLowerCase().includes(q) || db.persona?.name?.toLowerCase().includes(q)) ||
+      d.turns?.some((t) => t.content?.toLowerCase().includes(q)),
+    );
+  }, [debates, searchQuery]);
 
   const stats = useMemo(() => {
     const total = debates.length;
@@ -109,12 +122,33 @@ const HomeView: React.FC = () => {
         </section>
       )}
 
-      {/* Recent Debates */}
+      {/* Search + Recent Debates */}
       {debates.length > 0 && (
         <section className="mb-12">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Debates</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {searchQuery ? `Search Results (${filteredDebates.length})` : 'Recent Debates'}
+            </h2>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search debates..."
+                className="rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-8 text-sm text-gray-900 transition-colors placeholder:text-gray-400 focus:border-forge-500 focus:outline-none focus:ring-2 focus:ring-forge-500/30 dark:border-surface-dark-4 dark:bg-surface-dark-1 dark:text-gray-100 dark:placeholder:text-gray-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
           <div className="space-y-3">
-            {debates.slice(0, 8).map((debate) => {
+            {filteredDebates.slice(0, searchQuery ? 50 : 8).map((debate) => {
               const prop = debate.debaters?.find((d) => d.position === 'proposition');
               const opp = debate.debaters?.find((d) => d.position === 'opposition');
               return (
