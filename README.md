@@ -473,6 +473,14 @@ DEBATEFORGE_GOOGLE_KEY=AI...
 - [x] Notification sounds — audio cues for turn completion, agent switch, debate end
 - [x] Multi-format engine fix — engine now uses each format's own turn sequence
 - [x] Comprehensive test suite — 161 tests across 13 files
+- [x] Markdown rendering — rich formatting for debate turns (bold, links, lists, code)
+- [x] Debate templates — save and load debate configurations as reusable presets
+- [x] Debate tags — organize and filter debates with custom tags
+- [x] Auto-run speed control — adjustable delay slider in the toolbar
+- [x] Export to HTML — self-contained shareable debate page
+- [x] Word count analytics — per-turn word badges and post-debate word stats
+- [x] Debate notes — free-form notes attached to each debate
+- [x] Debate replay — step-through playback with play/pause/skip controls
 
 ---
 

@@ -30,6 +30,11 @@ import { calculateScores } from '../../../utils/scoring';
 import { VoiceSynthesisControls, SpeakButton, useVoiceSynthesis } from '../../components/VoiceSynthesis';
 import { BookmarkButton, BookmarksPanel, useBookmarks } from '../../components/DebateBookmarks';
 import { playTurnComplete, playAgentSwitch, playDebateComplete } from '../../components/NotificationSound';
+import { SpeedControl } from '../../components/SpeedControl';
+import { ExportHTMLButton } from '../../components/ExportHTML';
+import { WordCountBadge, DebateWordStats } from '../../components/WordCount';
+import { DebateNotes } from '../../components/DebateNotes';
+import { DebateReplay } from '../../components/DebateReplay';
 import type { DebateScore } from '../../../types';
 import type { DebateTurn, DebaterConfig, DetectedFallacy, Citation, Debate, DebatePhase, UserComment, OpinionValue, MomentumPoint } from '../../../types';
 
@@ -426,9 +431,10 @@ const TurnBubble: React.FC<TurnBubbleProps> = ({ turn, role, stepNumber, totalSt
           )}
         </div>
 
-        <p className={clsx('mt-1 text-xs text-gray-400 dark:text-gray-500', !isProposition && 'text-right')}>
-          {new Date(turn.timestamp).toLocaleTimeString()}
-        </p>
+        <div className={clsx('mt-1 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500', !isProposition && 'justify-end')}>
+          <WordCountBadge content={turn.content} />
+          <span>{new Date(turn.timestamp).toLocaleTimeString()}</span>
+        </div>
       </div>
 
       {/* Avatar on right for opposition */}
@@ -684,7 +690,14 @@ const DebateView: React.FC = () => {
     setAudienceVotes({ for: 0, against: 0, undecided: 0 });
   }, []);
 
-  /* ── Feature 10: Debate Bookmarks ── */
+  /* ── Feature 10: Speed Control ── */
+  const [autoRunDelay, setAutoRunDelay] = useState(1500);
+
+  /* ── Feature 12: Replay Mode (for completed debates) ── */
+  const [replayVisibleTurns, setReplayVisibleTurns] = useState<number | null>(null);
+  const isReplayMode = replayVisibleTurns !== null;
+
+  /* ── Feature 13: Debate Bookmarks ── */
   const { bookmarks, isBookmarked, toggleBookmark, removeBookmark, updateNote } = useBookmarks();
 
   /* ── Feature 11: Notification Sounds ── */
@@ -1168,7 +1181,7 @@ const DebateView: React.FC = () => {
     }
 
     // Use longer delay when switching between different agents
-    const delay = isAgentSwitch ? 2500 : 1000;
+    const delay = isAgentSwitch ? autoRunDelay + 1000 : autoRunDelay;
 
     const timer = setTimeout(() => {
       setAgentTransition(null);
@@ -1224,6 +1237,7 @@ const DebateView: React.FC = () => {
 
               {!isCompleted && (
                 <>
+                  <SpeedControl delay={autoRunDelay} onChange={setAutoRunDelay} />
                   <Tooltip content="Audience voting panel">
                     <Button variant="ghost" size="sm" onClick={() => setShowAudiencePanel((v) => !v)}>
                       <Users className="h-4 w-4" />
@@ -1823,6 +1837,7 @@ const DebateView: React.FC = () => {
                   </Button>
                 </Tooltip>
                 {currentDebate && <ShareCardButtons debate={currentDebate} />}
+                {currentDebate && <ExportHTMLButton debate={currentDebate} />}
                 <Tooltip content="Rematch with swapped sides">
                   <Button variant="outline" size="sm" onClick={handleQuickRematch} icon={<Repeat className="h-4 w-4" />}>
                     Rematch
@@ -1833,6 +1848,23 @@ const DebateView: React.FC = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Replay controls for completed debates */}
+            <div className="border-t border-gray-100 px-5 py-2 dark:border-surface-dark-2">
+              <DebateReplay
+                totalTurns={turns.length}
+                visibleTurns={replayVisibleTurns ?? turns.length}
+                onVisibleTurnsChange={(n) => setReplayVisibleTurns(n === turns.length ? null : n)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Word Stats + Notes (after completed bar) */}
+        {isCompleted && currentDebate && (
+          <div className="space-y-3 border-t border-gray-200 px-5 py-4 dark:border-surface-dark-3">
+            <DebateWordStats turns={turns} debaters={currentDebate.debaters} />
+            <DebateNotes debateId={currentDebate.id} />
           </div>
         )}
       </div>
