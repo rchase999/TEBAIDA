@@ -510,6 +510,16 @@ export class DebateEngine {
       );
     }
 
+    // ── Agent Identity & Turn Boundaries ──
+    sections.push(
+      'CRITICAL TURN BOUNDARIES:\n' +
+      `- You are ONE distinct agent in a multi-agent debate. You are "${persona.name}" and ONLY "${persona.name}".\n` +
+      '- Generate ONLY your own turn. Do NOT simulate, write, or predict what other debaters will say.\n' +
+      '- Do NOT generate dialogue for the Housemaster, Proposition, or Opposition — only your own contribution.\n' +
+      '- Do NOT produce a full debate transcript. Write ONLY your single turn for this phase.\n' +
+      '- Your response should be self-contained: one speaker, one turn, one perspective.'
+    );
+
     // ── Global Rules ──
     sections.push(
       'IMPORTANT RULES:\n' +

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChevronRight, ChevronLeft, Play, Lightbulb,
-  Check, RefreshCw, Shuffle,
+  Check, RefreshCw,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -65,6 +65,7 @@ const CLOUD_MODELS: ModelConfig[] = [
 const POSITION_LABELS: Record<string, string> = {
   proposition: 'Proposition',
   opposition: 'Opposition',
+  housemaster: 'Housemaster',
 };
 
 /* ------- component ------- */
@@ -142,69 +143,39 @@ const SetupWizard: React.FC = () => {
   // Merge cloud + local models
   const AVAILABLE_MODELS = useMemo(() => [...CLOUD_MODELS, ...localModels], [localModels]);
 
+  // Check if all debaters use the same model (warn about lack of diversity)
+  const allSameModel = useMemo(() => {
+    if (setupDebaters.length < 2) return false;
+    const firstModelId = setupDebaters[0]?.model?.id;
+    return setupDebaters.every((d) => d.model?.id === firstModelId);
+  }, [setupDebaters]);
+
   const canNext = useMemo(() => {
     if (step === 0) return setupTopic.trim().length > 5;
-    if (step === 1) return setupDebaters.length >= 2 && setupDebaters.every((d) => d.name && d.model);
+    if (step === 1) return setupDebaters.length >= 3 && setupDebaters.every((d) => d.name && d.model);
     if (step === 2) return true; // Review step
     if (step === 3) return preOpinion !== null; // Opinion poll step
     return true;
   }, [step, setupTopic, setupDebaters, preOpinion]);
 
   const handleStart = () => {
-    // Randomly select a model for the Housemaster from all available models
-    const housemasterModel = AVAILABLE_MODELS[Math.floor(Math.random() * AVAILABLE_MODELS.length)];
-
-    // Pick a random persona for the Housemaster
-    const housemasterPersona: Persona = personas.length > 0
-      ? personas[Math.floor(Math.random() * personas.length)]
-      : {
-          id: 'default-housemaster',
-          name: 'The Housemaster',
-          tagline: 'Order in the house!',
-          background: 'An experienced parliamentary moderator and debate adjudicator.',
-          expertise: ['moderation', 'parliamentary procedure', 'rhetoric', 'critical analysis'],
-          rhetorical_style: 'Authoritative yet fair. Maintains decorum while probing both sides equally.',
-          ideological_leanings: 'Strictly neutral — focused on fairness and quality of argument.',
-          argumentation_preferences: {
-            evidence_weight: 'heavy',
-            emotional_appeals: 'minimal',
-            concession_willingness: 'moderate',
-            humor: 'Wry parliamentary wit.',
-          },
-          debate_behavior: {
-            opening_strategy: 'Set the stage clearly, explain the motion, and establish ground rules.',
-            rebuttal_strategy: 'Ask pointed questions to both sides, challenging weak points impartially.',
-            closing_strategy: 'Weigh all arguments presented and deliver a reasoned verdict.',
-          },
-          avatar_color: '#D97706',
-        };
-
-    // Create the Housemaster debater config
-    const housemasterId = uuidv4();
-    const housemasterDebater: DebaterConfig = {
-      id: housemasterId,
-      name: 'Housemaster',
-      model: housemasterModel,
-      persona: housemasterPersona,
-      position: 'housemaster',
-      isLocal: housemasterModel.provider === 'ollama' || housemasterModel.provider === 'lmstudio',
-    };
-
-    // Auto-assign debater names from their persona if not customized
-    const finalDebaters = setupDebaters.map((d) => ({
+    // All three debaters (proposition, opposition, housemaster) are now user-configured
+    // Assign unique IDs and finalize names from persona if not customized
+    const finalDebaters: DebaterConfig[] = setupDebaters.map((d) => ({
       ...d,
-      name: d.name || d.persona?.name || (d.position === 'proposition' ? 'Proposition' : 'Opposition'),
+      id: d.id || uuidv4(),
+      name: d.name || d.persona?.name || POSITION_LABELS[d.position] || 'Debater',
     }));
 
-    // Build the full debaters array: user-configured proposition + opposition, plus the auto-assigned housemaster
-    const allDebaters: DebaterConfig[] = [...finalDebaters, housemasterDebater];
+    const housemaster = finalDebaters.find((d) => d.position === 'housemaster');
+    const housemasterId = housemaster?.id ?? '';
 
     const debate = {
       id: uuidv4(),
       topic: setupTopic,
       format: OXFORD_UNION_FORMAT,
       status: 'in-progress' as const,
-      debaters: allDebaters,
+      debaters: finalDebaters,
       turns: [],
       currentRound: 1,
       currentDebaterIndex: 0,
@@ -273,7 +244,7 @@ const SetupWizard: React.FC = () => {
         <div>
           <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">Configure Debaters</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Assign a model and persona to the Proposition and Opposition. A Housemaster will be randomly assigned when the debate starts.
+            Assign a model and persona to each participant. Using different models creates a more dynamic multi-agent debate.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -286,13 +257,33 @@ const SetupWizard: React.FC = () => {
         </div>
       </div>
 
+      {/* Model diversity warning */}
+      {allSameModel && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20">
+          <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            All debaters use the same model. For a more dynamic debate, try assigning different models to each participant so each agent has its own reasoning style.
+          </p>
+        </div>
+      )}
+
       <div className="space-y-4">
         {setupDebaters.map((debater) => (
-          <Card key={debater.id} className="space-y-4">
+          <Card key={debater.id} className={clsx(
+            'space-y-4',
+            debater.position === 'housemaster' && 'ring-1 ring-amber-300 dark:ring-amber-700',
+          )}>
             <div className="mb-2 flex items-center gap-2">
-              <Badge variant={debater.position === 'proposition' ? 'success' : 'error'}>
+              <Badge variant={
+                debater.position === 'proposition' ? 'success'
+                : debater.position === 'opposition' ? 'error'
+                : 'warning'
+              }>
                 {POSITION_LABELS[debater.position] ?? debater.position}
               </Badge>
+              {debater.position === 'housemaster' && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">Neutral moderator & judge</span>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -300,7 +291,7 @@ const SetupWizard: React.FC = () => {
                 label="Name"
                 value={debater.name}
                 onChange={(e) => updateSetupDebater(debater.id, { name: e.target.value })}
-                placeholder="Debater name"
+                placeholder={POSITION_LABELS[debater.position] ?? 'Debater name'}
               />
 
               <Select
@@ -363,10 +354,15 @@ const SetupWizard: React.FC = () => {
           </p>
           <div className="space-y-3">
             {setupDebaters.map((d) => (
-              <div key={d.id} className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-surface-dark-3">
+              <div key={d.id} className={clsx(
+                'flex items-center gap-3 rounded-lg border p-3',
+                d.position === 'housemaster'
+                  ? 'border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10'
+                  : 'border-gray-200 dark:border-surface-dark-3',
+              )}>
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
-                  style={{ backgroundColor: d.persona?.avatar_color ?? '#6b7280' }}
+                  style={{ backgroundColor: d.persona?.avatar_color ?? (d.position === 'housemaster' ? '#D97706' : '#6b7280') }}
                 >
                   {(d.name ?? 'D')[0].toUpperCase()}
                 </div>
@@ -378,25 +374,25 @@ const SetupWizard: React.FC = () => {
                     <span>{d.persona?.name ?? 'No persona'}</span>
                   </div>
                 </div>
-                <Badge variant={d.position === 'proposition' ? 'success' : 'error'}>
+                <Badge variant={
+                  d.position === 'proposition' ? 'success'
+                  : d.position === 'opposition' ? 'error'
+                  : 'warning'
+                }>
                   {POSITION_LABELS[d.position] ?? d.position}
                 </Badge>
               </div>
             ))}
 
-            {/* Housemaster auto-assignment notice */}
-            <div className="flex items-center gap-3 rounded-lg border border-dashed border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/20">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white">
-                <Shuffle className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 dark:text-gray-100">Housemaster</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  A random model and persona will be assigned when the debate starts
+            {/* Model diversity indicator */}
+            {allSameModel && (
+              <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 dark:bg-amber-900/20">
+                <Lightbulb className="h-4 w-4 text-amber-500" />
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  All debaters use the same model. Different models produce more varied arguments.
                 </p>
               </div>
-              <Badge variant="warning">Auto-assigned</Badge>
-            </div>
+            )}
           </div>
         </div>
       </Card>

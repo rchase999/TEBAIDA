@@ -446,8 +446,16 @@ DEBATEFORGE_GOOGLE_KEY=AI...
 - [x] Local model support via Ollama
 - [x] Custom persona system
 - [x] Evidence browser panel with auto-scroll
+- [x] True multi-agent debate — each debater uses its own model with distinct routing
+- [x] Configurable Housemaster — choose model and persona for the moderator
+- [x] Agent transition indicators — clear visual handoff between debaters
+- [x] Model diversity warnings — hints when all debaters use the same model
+- [x] Debate transcript export — download or copy as Markdown
+- [x] Auto-scoring with breakdown — argumentation, evidence, rebuttal, rhetoric
+- [x] Logical fallacy detection overlay
+- [x] Post-debate opinion shift tracking
+- [x] Enhanced debate history with matchup display
 - [ ] Universal Persona Prompt (UPP) v1.0
-- [ ] Logical fallacy detection overlay
 - [ ] Tournament mode with ELO-style rankings
 - [ ] Audience mode — invite friends to vote on debate winners
 - [ ] Voice synthesis — hear debaters speak their arguments (TTS integration)

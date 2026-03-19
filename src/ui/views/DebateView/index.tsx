@@ -4,6 +4,7 @@ import {
   Play, Pause, Square, PanelRightOpen, PanelRightClose,
   ExternalLink, AlertTriangle, ChevronRight, RotateCcw,
   Gavel, Crown, Shield, Swords, ChevronDown, ChevronUp, MessageSquare,
+  Download, Copy, CheckCheck,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -25,6 +26,8 @@ import { ModelRouter } from '../../../services/model-router';
 import { EvidenceVerifier } from '../../../core/evidence_verifier/index';
 import { FallacyDetector } from '../../../core/fallacy_detector/index';
 import { calculateMomentum } from '../../../core/momentum/index';
+import { calculateScores } from '../../../utils/scoring';
+import type { DebateScore } from '../../../types';
 import type { DebateTurn, DebaterConfig, DetectedFallacy, Citation, Debate, DebatePhase, UserComment, OpinionValue, MomentumPoint } from '../../../types';
 
 /* ======================================================================
@@ -526,11 +529,100 @@ const DebateView: React.FC = () => {
   /* ── Feature 5: Live Momentum Graph state ── */
   const [showMomentumGraph, setShowMomentumGraph] = useState(true);
 
+  /* ── Feature 6: Transcript Export ── */
+  const [copiedTranscript, setCopiedTranscript] = useState(false);
+
+  const generateTranscriptMarkdown = useCallback((): string => {
+    if (!currentDebate) return '';
+    const lines: string[] = [];
+    lines.push(`# Debate: ${currentDebate.topic}`);
+    lines.push(`**Format:** ${currentDebate.format.name}`);
+    lines.push(`**Date:** ${new Date(currentDebate.createdAt).toLocaleDateString()}`);
+    lines.push(`**Status:** ${currentDebate.status}`);
+    lines.push('');
+    lines.push('## Participants');
+    for (const d of currentDebate.debaters) {
+      lines.push(`- **${d.name}** (${d.position}) — ${d.model.displayName} / ${d.persona.name}`);
+    }
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+
+    for (const [i, turn] of currentDebate.turns.entries()) {
+      const debater = currentDebate.debaters.find((d) => d.id === turn.debaterId);
+      const role = debater?.position ?? 'unknown';
+      const phaseLabel = PHASE_LABELS[turn.phase] ?? turn.phase;
+      lines.push(`### Step ${i + 1}: ${phaseLabel} — ${turn.debaterName} [${role.toUpperCase()}]`);
+      lines.push(`*Model: ${turn.model} | Persona: ${turn.persona}*`);
+      lines.push('');
+      lines.push(turn.content);
+      lines.push('');
+      if (turn.citations && turn.citations.length > 0) {
+        lines.push('**Citations:**');
+        for (const c of turn.citations) {
+          lines.push(`- [${c.title || c.url}](${c.url})`);
+        }
+        lines.push('');
+      }
+      if (turn.fallacies && turn.fallacies.length > 0) {
+        lines.push('**Detected Fallacies:**');
+        for (const f of turn.fallacies) {
+          lines.push(`- ${f.name} (${f.severity}): ${f.description}`);
+        }
+        lines.push('');
+      }
+      lines.push('---');
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }, [currentDebate]);
+
+  const handleExportTranscript = useCallback(() => {
+    const markdown = generateTranscriptMarkdown();
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `debate-${currentDebate?.topic?.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '-') ?? 'transcript'}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [generateTranscriptMarkdown, currentDebate]);
+
+  const handleCopyTranscript = useCallback(async () => {
+    const markdown = generateTranscriptMarkdown();
+    try {
+      await navigator.clipboard.writeText(markdown);
+      setCopiedTranscript(true);
+      setTimeout(() => setCopiedTranscript(false), 2000);
+    } catch {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = markdown;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopiedTranscript(true);
+      setTimeout(() => setCopiedTranscript(false), 2000);
+    }
+  }, [generateTranscriptMarkdown]);
+
   // Calculate momentum data from current turns
   const momentumData: MomentumPoint[] = useMemo(() => {
     if (!currentDebate || currentDebate.turns.length === 0) return [];
     return calculateMomentum(currentDebate);
   }, [currentDebate?.turns?.length, currentDebate]);
+
+  // Calculate scores when debate completes
+  const debateScores: DebateScore[] = useMemo(() => {
+    if (!currentDebate || currentDebate.status !== 'completed') return [];
+    return calculateScores(currentDebate).filter((s) => {
+      // Only score proposition and opposition, not housemaster
+      const debater = currentDebate.debaters.find((d) => d.id === s.debaterId);
+      return debater?.position !== 'housemaster';
+    });
+  }, [currentDebate?.status, currentDebate]);
 
   // Show the post-debate poll when the debate completes and user hasn't voted yet
   useEffect(() => {
@@ -862,6 +954,14 @@ const DebateView: React.FC = () => {
 
   // Auto-run: automatically trigger the next turn after the previous one completes
   const autoRunRef = useRef(true);
+
+  // Track agent transitions for visual indicators
+  const [agentTransition, setAgentTransition] = useState<{
+    from: string | null;
+    to: string;
+    toRole: DebateRole;
+  } | null>(null);
+
   useEffect(() => {
     if (
       !currentDebate ||
@@ -875,13 +975,33 @@ const DebateView: React.FC = () => {
       return;
     }
 
-    // Small delay between turns for readability
+    // Determine if we're switching agents — use longer delay for agent switches
+    const prevStep = currentStep - 1;
+    const prevRole = prevStep >= 0 ? getRoleForStep(currentDebate, prevStep) : undefined;
+    const nextRole = getRoleForStep(currentDebate, currentStep);
+    const nextDebater = getDebaterForStep(currentDebate, currentStep);
+    const isAgentSwitch = prevRole !== nextRole;
+
+    // Show agent transition indicator when switching agents
+    if (isAgentSwitch && nextDebater && nextRole) {
+      const prevDebater = prevStep >= 0 ? getDebaterForStep(currentDebate, prevStep) : undefined;
+      setAgentTransition({
+        from: prevDebater?.name ?? null,
+        to: nextDebater.name,
+        toRole: nextRole,
+      });
+    }
+
+    // Use longer delay when switching between different agents
+    const delay = isAgentSwitch ? 2500 : 1000;
+
     const timer = setTimeout(() => {
+      setAgentTransition(null);
       handleContinue();
-    }, 800);
+    }, delay);
 
     return () => clearTimeout(timer);
-  }, [currentDebate?.turns?.length, isGenerating, currentStep, totalSteps, currentDebate?.status]);
+  }, [currentDebate?.turns?.length, isGenerating, currentStep, totalSteps, currentDebate?.status, handleContinue]);
 
   /* ---- Compute info about the currently-generating or next turn ---- */
   const activeDebater = stepInfo?.nextDebater;
@@ -1021,6 +1141,30 @@ const DebateView: React.FC = () => {
               </React.Fragment>
             );
           })}
+
+          {/* Agent Transition Banner — shown when switching between agents */}
+          {agentTransition && !isGenerating && (
+            <div className="animate-fade-in mx-auto flex max-w-md items-center justify-center gap-3 rounded-full border border-gray-200 bg-white/90 px-5 py-2.5 shadow-sm backdrop-blur dark:border-surface-dark-3 dark:bg-surface-dark-1/90">
+              <div className={clsx(
+                'h-2 w-2 animate-pulse rounded-full',
+                agentTransition.toRole === 'housemaster' ? 'bg-amber-400' :
+                agentTransition.toRole === 'proposition' ? 'bg-blue-400' : 'bg-rose-400',
+              )} />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                {agentTransition.from
+                  ? `Switching to ${agentTransition.to}`
+                  : `${agentTransition.to} is preparing`
+                }
+              </span>
+              <span className={clsx(
+                'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold',
+                ROLE_COLORS[agentTransition.toRole].badge,
+              )}>
+                {getRoleIcon(agentTransition.toRole, 'h-3 w-3')}
+                {ROLE_LABELS[agentTransition.toRole]}
+              </span>
+            </div>
+          )}
 
           {/* Streaming content — while generating */}
           {isGenerating && (streamingContent || streamingThinking) && activeDebater && (
@@ -1180,6 +1324,96 @@ const DebateView: React.FC = () => {
             </div>
           )}
 
+          {/* Scorecard — shown after debate completes */}
+          {isCompleted && debateScores.length > 0 && (
+            <div className="mx-auto max-w-3xl animate-fade-in">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-surface-dark-3 dark:bg-surface-dark-1">
+                <div className="mb-5 flex items-center justify-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 shadow-sm">
+                    <Gavel className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Debate Scorecard</h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {debateScores.map((score) => {
+                    const debater = currentDebate.debaters.find((d) => d.id === score.debaterId);
+                    const role = debater?.position === 'proposition' ? 'proposition' : 'opposition';
+                    const colors = ROLE_COLORS[role];
+                    const categories = [
+                      { label: 'Argumentation', value: score.categories.argumentation },
+                      { label: 'Evidence', value: score.categories.evidence },
+                      { label: 'Rebuttal', value: score.categories.rebuttal },
+                      { label: 'Rhetoric', value: score.categories.rhetoric },
+                    ];
+                    return (
+                      <div key={score.debaterId} className={clsx('rounded-xl border p-4', colors.border)}>
+                        <div className="mb-3 flex items-center gap-2">
+                          <span className={clsx('inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold', colors.badge)}>
+                            {getRoleIcon(role, 'h-3 w-3')}
+                            {score.debaterName}
+                          </span>
+                          <span className="ml-auto text-lg font-bold text-gray-900 dark:text-gray-100">
+                            {score.categories.overall}/10
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          {categories.map((cat) => (
+                            <div key={cat.label} className="flex items-center gap-2">
+                              <span className="w-28 text-xs text-gray-500 dark:text-gray-400">{cat.label}</span>
+                              <div className="flex-1 h-2 rounded-full bg-gray-200 dark:bg-surface-dark-3 overflow-hidden">
+                                <div
+                                  className={clsx(
+                                    'h-full rounded-full transition-all duration-500',
+                                    role === 'proposition' ? 'bg-blue-400' : 'bg-rose-400',
+                                  )}
+                                  style={{ width: `${(cat.value / 10) * 100}%` }}
+                                />
+                              </div>
+                              <span className="w-8 text-right text-xs font-medium text-gray-700 dark:text-gray-300">
+                                {cat.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        {score.notes && (
+                          <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{score.notes}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Winner announcement */}
+                {debateScores.length >= 2 && (() => {
+                  const sorted = [...debateScores].sort((a, b) => b.categories.overall - a.categories.overall);
+                  const margin = sorted[0].categories.overall - sorted[1].categories.overall;
+                  const winner = sorted[0];
+                  const winnerDebater = currentDebate.debaters.find((d) => d.id === winner.debaterId);
+                  const winnerRole = winnerDebater?.position === 'proposition' ? 'proposition' : 'opposition';
+                  if (margin > 0) {
+                    return (
+                      <div className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-3 dark:from-amber-950/20 dark:to-yellow-950/10">
+                        <Crown className="h-5 w-5 text-amber-500" />
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          {margin > 0.5 ? 'Winner' : 'Narrow Winner'}: {winner.debaterName}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          (by {margin.toFixed(1)} points)
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-gray-50 px-4 py-3 dark:bg-surface-dark-2">
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Draw</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+
           {/* Post-Debate Opinion Poll */}
           {isCompleted && showPostPoll && currentDebate?.userPreOpinion && (
             <div className="mx-auto max-w-2xl animate-fade-in">
@@ -1330,6 +1564,16 @@ const DebateView: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Tooltip content="Copy transcript to clipboard">
+                  <Button variant="ghost" size="sm" onClick={handleCopyTranscript} icon={copiedTranscript ? <CheckCheck className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}>
+                    {copiedTranscript ? 'Copied' : 'Copy'}
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Download transcript as Markdown">
+                  <Button variant="ghost" size="sm" onClick={handleExportTranscript} icon={<Download className="h-4 w-4" />}>
+                    Export
+                  </Button>
+                </Tooltip>
                 {currentDebate && <ShareCardButtons debate={currentDebate} />}
                 <Button variant="outline" size="sm" onClick={() => { setCurrentView('setup'); }} icon={<RotateCcw className="h-4 w-4" />}>
                   New Debate

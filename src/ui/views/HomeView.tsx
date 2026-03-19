@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import {
   Swords, Plus, ShieldCheck, Users, Cpu,
   AlertTriangle, Clock, BarChart3, Sparkles,
+  Trophy, Crown, Shield, TrendingUp,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { Button } from '../components/Button';
@@ -113,27 +114,42 @@ const HomeView: React.FC = () => {
         <section className="mb-12">
           <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Debates</h2>
           <div className="space-y-3">
-            {debates.slice(0, 8).map((debate) => (
-              <Card key={debate.id} hover onClick={() => handleOpenDebate(debate)} className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-gray-900 dark:text-gray-100">{debate.topic}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span>{FORMAT_LABELS[debate.format?.id] ?? debate.format?.name ?? 'Unknown'}</span>
-                    <span className="text-gray-300 dark:text-surface-dark-4">|</span>
-                    <span>{debate.debaters?.length ?? 0} debater{(debate.debaters?.length ?? 0) !== 1 ? 's' : ''}</span>
-                    <span className="text-gray-300 dark:text-surface-dark-4">|</span>
-                    <span>{debate.turns?.length ?? 0} turns</span>
+            {debates.slice(0, 8).map((debate) => {
+              const prop = debate.debaters?.find((d) => d.position === 'proposition');
+              const opp = debate.debaters?.find((d) => d.position === 'opposition');
+              return (
+                <Card key={debate.id} hover onClick={() => handleOpenDebate(debate)} className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-gray-900 dark:text-gray-100">{debate.topic}</p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
+                      {/* Matchup: Prop vs Opp with models */}
+                      {prop && opp && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            <Shield className="h-3 w-3" />
+                            {prop.model?.displayName ?? prop.name}
+                          </span>
+                          <span className="text-xs font-bold text-gray-400">vs</span>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">
+                            <Swords className="h-3 w-3" />
+                            {opp.model?.displayName ?? opp.name}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-gray-300 dark:text-surface-dark-4">|</span>
+                      <span className="text-gray-500 dark:text-gray-400">{debate.turns?.length ?? 0}/{debate.format?.totalTurns ?? 10} turns</span>
+                    </div>
                   </div>
-                </div>
-                <div className="ml-4 flex shrink-0 items-center gap-3">
-                  <Badge variant={STATUS_VARIANT[debate.status] ?? 'default'}>{debate.status}</Badge>
-                  <span className="hidden text-sm text-gray-400 dark:text-gray-500 sm:inline">
-                    <Clock className="mr-1 inline-block h-3.5 w-3.5" />
-                    {formatDate(debate.createdAt)}
-                  </span>
-                </div>
-              </Card>
-            ))}
+                  <div className="ml-4 flex shrink-0 items-center gap-3">
+                    <Badge variant={STATUS_VARIANT[debate.status] ?? 'default'}>{debate.status}</Badge>
+                    <span className="hidden text-sm text-gray-400 dark:text-gray-500 sm:inline">
+                      <Clock className="mr-1 inline-block h-3.5 w-3.5" />
+                      {formatDate(debate.createdAt)}
+                    </span>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </section>
       )}

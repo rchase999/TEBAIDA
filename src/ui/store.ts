@@ -105,6 +105,44 @@ function makeDefaultDebater(position: 'proposition' | 'opposition', index: numbe
   };
 }
 
+function makeDefaultHousemaster(): DebaterConfig {
+  return {
+    id: 'debater-housemaster',
+    name: 'Housemaster',
+    model: {
+      id: 'gpt-4o',
+      provider: 'openai',
+      name: 'gpt-4o',
+      displayName: 'GPT-4o',
+      maxTokens: 4096,
+      supportsStreaming: true,
+    },
+    persona: {
+      id: 'default-housemaster',
+      name: 'The Housemaster',
+      tagline: 'Order in the house!',
+      background: 'An experienced parliamentary moderator and debate adjudicator with decades of experience presiding over formal debates.',
+      expertise: ['moderation', 'parliamentary procedure', 'rhetoric', 'critical analysis'],
+      rhetorical_style: 'Authoritative yet fair. Maintains decorum while probing both sides equally.',
+      ideological_leanings: 'Strictly neutral — focused on fairness and quality of argument.',
+      argumentation_preferences: {
+        evidence_weight: 'heavy',
+        emotional_appeals: 'minimal',
+        concession_willingness: 'moderate',
+        humor: 'Wry parliamentary wit.',
+      },
+      debate_behavior: {
+        opening_strategy: 'Set the stage clearly, explain the motion, and establish ground rules.',
+        rebuttal_strategy: 'Ask pointed questions to both sides, challenging weak points impartially.',
+        closing_strategy: 'Weigh all arguments presented and deliver a reasoned verdict.',
+      },
+      avatar_color: '#D97706',
+    },
+    position: 'housemaster',
+    isLocal: false,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Helpers: load theme preference
 // ---------------------------------------------------------------------------
@@ -513,7 +551,7 @@ export const useStore = create<DebateForgeState>((set, get) => {
 
     // ── Setup state ────────────────────────────────────────────────────────
     setupTopic: '',
-    setupDebaters: [makeDefaultDebater('proposition', 0), makeDefaultDebater('opposition', 1)],
+    setupDebaters: [makeDefaultDebater('proposition', 0), makeDefaultDebater('opposition', 1), makeDefaultHousemaster()],
 
     setSetupTopic: (topic) => set({ setupTopic: topic }),
 
@@ -538,7 +576,7 @@ export const useStore = create<DebateForgeState>((set, get) => {
     resetSetup: () => {
       set({
         setupTopic: '',
-        setupDebaters: [makeDefaultDebater('proposition', 0), makeDefaultDebater('opposition', 1)],
+        setupDebaters: [makeDefaultDebater('proposition', 0), makeDefaultDebater('opposition', 1), makeDefaultHousemaster()],
       });
     },
 
