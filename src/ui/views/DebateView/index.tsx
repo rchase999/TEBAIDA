@@ -27,6 +27,7 @@ import { EvidenceVerifier } from '../../../core/evidence_verifier/index';
 import { FallacyDetector } from '../../../core/fallacy_detector/index';
 import { calculateMomentum } from '../../../core/momentum/index';
 import { calculateScores } from '../../../utils/scoring';
+import { VoiceSynthesisControls, SpeakButton, useVoiceSynthesis } from '../../components/VoiceSynthesis';
 import type { DebateScore } from '../../../types';
 import type { DebateTurn, DebaterConfig, DetectedFallacy, Citation, Debate, DebatePhase, UserComment, OpinionValue, MomentumPoint } from '../../../types';
 
@@ -220,9 +221,11 @@ interface TurnBubbleProps {
   onCitationClick: (url: string, passage: string) => void;
   reactionCounts: ReactionCounts;
   onReact: (turnId: string, emoji: string, event: React.MouseEvent) => void;
+  ttsEnabled?: boolean;
+  voiceAssignment?: import('../../components/VoiceSynthesis').VoiceAssignment;
 }
 
-const TurnBubble: React.FC<TurnBubbleProps> = ({ turn, role, stepNumber, totalSteps, debater, onCitationClick, reactionCounts, onReact }) => {
+const TurnBubble: React.FC<TurnBubbleProps> = ({ turn, role, stepNumber, totalSteps, debater, onCitationClick, reactionCounts, onReact, ttsEnabled, voiceAssignment }) => {
   const colors = ROLE_COLORS[role];
   const isHousemaster = role === 'housemaster';
   const isVerdict = turn.phase === 'verdict';
@@ -402,8 +405,11 @@ const TurnBubble: React.FC<TurnBubbleProps> = ({ turn, role, stepNumber, totalSt
           )}
         </div>
 
-        {/* Reactions */}
-        <ReactionBar turnId={turn.id} counts={reactionCounts} onReact={onReact} />
+        {/* Reactions + TTS */}
+        <div className="flex items-center gap-2">
+          <ReactionBar turnId={turn.id} counts={reactionCounts} onReact={onReact} />
+          <SpeakButton text={turn.content} voiceAssignment={voiceAssignment} enabled={!!ttsEnabled} />
+        </div>
 
         <p className={clsx('mt-1 text-xs text-gray-400 dark:text-gray-500', !isProposition && 'text-right')}>
           {new Date(turn.timestamp).toLocaleTimeString()}
@@ -623,6 +629,84 @@ const DebateView: React.FC = () => {
       return debater?.position !== 'housemaster';
     });
   }, [currentDebate?.status, currentDebate]);
+
+  // ── Voice Synthesis (TTS) ──
+  const tts = useVoiceSynthesis();
+
+  // Initialize TTS voices when debaters are available
+  useEffect(() => {
+    if (currentDebate?.debaters) {
+      // Voices may load asynchronously, retry after a short delay
+      const init = () => tts.initVoices(currentDebate.debaters);
+      init();
+      // Chrome loads voices asynchronously
+      window.speechSynthesis?.addEventListener?.('voiceschanged', init);
+      return () => window.speechSynthesis?.removeEventListener?.('voiceschanged', init);
+    }
+  }, [currentDebate?.debaters, tts.initVoices]);
+
+  // Auto-speak new turns when TTS is enabled
+  useEffect(() => {
+    if (tts.enabled && currentDebate?.turns && currentDebate.turns.length > 0) {
+      const lastTurn = currentDebate.turns[currentDebate.turns.length - 1];
+      if (lastTurn && !isGenerating) {
+        tts.speak(lastTurn.content, lastTurn.debaterId);
+      }
+    }
+  }, [currentDebate?.turns?.length, isGenerating, tts.enabled]);
+
+  // ── Keyboard Shortcuts ── (defined before handleContinue, uses refs for late-bound values)
+  const handleContinueRef = useRef<(() => void) | undefined>(undefined);
+  // The ref is updated later when handleContinue is defined
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      if (!currentDebate) return;
+
+      const debateIsPaused = currentDebate.status === 'paused';
+      const debateIsCompleted = currentDebate.status === 'completed' || currentDebate.status === 'cancelled';
+      const debateCurrentStep = currentDebate.turns?.length ?? 0;
+      const debateTotalSteps = currentDebate.format?.totalTurns ?? 10;
+
+      switch (e.key) {
+        case ' ': // Space: pause/resume
+          e.preventDefault();
+          if (currentDebate.status === 'in-progress' || debateIsPaused) {
+            if (debateIsPaused) {
+              autoRunRef.current = true;
+              setCurrentDebate({ ...currentDebate, status: 'in-progress', updatedAt: new Date().toISOString() });
+            } else {
+              autoRunRef.current = false;
+              setCurrentDebate({ ...currentDebate, status: 'paused', updatedAt: new Date().toISOString() });
+            }
+          }
+          break;
+        case 'Enter': // Enter: continue to next turn
+          e.preventDefault();
+          if (!isGenerating && !debateIsPaused && debateCurrentStep < debateTotalSteps) {
+            handleContinueRef.current?.();
+          }
+          break;
+        case 'Escape': // Escape: stop debate
+          e.preventDefault();
+          if (!debateIsCompleted) {
+            autoRunRef.current = false;
+            setCurrentDebate({ ...currentDebate, status: 'completed', updatedAt: new Date().toISOString() });
+          }
+          break;
+        case 'v': // V: toggle voice
+          if (!e.ctrlKey && !e.metaKey) {
+            tts.toggle();
+          }
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentDebate, isGenerating, setCurrentDebate, tts]);
 
   // Show the post-debate poll when the debate completes and user hasn't voted yet
   useEffect(() => {
@@ -952,6 +1036,9 @@ const DebateView: React.FC = () => {
     }
   }, [currentDebate, isGenerating, currentStep, totalSteps, apiKeys, settings, setCurrentDebate, setStreamingContent, setStreamingThinking, clearStreamingContent, userQuestions]);
 
+  // Keep keyboard shortcut ref in sync with handleContinue
+  handleContinueRef.current = handleContinue;
+
   // Auto-run: automatically trigger the next turn after the previous one completes
   const autoRunRef = useRef(true);
 
@@ -1034,6 +1121,13 @@ const DebateView: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <VoiceSynthesisControls
+                enabled={tts.enabled}
+                onToggle={tts.toggle}
+                isSpeaking={tts.isSpeaking}
+                onPauseResume={tts.pauseResume}
+                onStop={tts.stop}
+              />
               <Tooltip content={showEvidencePanel ? 'Hide evidence panel' : 'Show evidence panel'}>
                 <Button variant="ghost" size="sm" onClick={toggleEvidencePanel}>
                   {showEvidencePanel ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
@@ -1133,6 +1227,8 @@ const DebateView: React.FC = () => {
                   onCitationClick={handleCitationClick}
                   reactionCounts={reactions[turn.id] ?? {}}
                   onReact={handleReact}
+                  ttsEnabled={tts.enabled}
+                  voiceAssignment={tts.voiceAssignments[turn.debaterId]}
                 />
                 {/* Inline user comments that were added after this turn */}
                 {turnComments.map((comment, ci) => (

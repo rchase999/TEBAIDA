@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Search, Plus, Trash2, Copy, Save, Download, Upload,
-  X, User, Palette, Tag, MessageSquare,
+  X, User, Palette, Tag, MessageSquare, Share2, FileText,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -13,7 +13,7 @@ import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Avatar } from '../../components/Avatar';
 import { Modal } from '../../components/Modal';
-import type { Persona } from '../../../types';
+import type { Persona, UniversalPersonaPrompt } from '../../../types';
 
 /* ------- default empty persona ------- */
 
@@ -156,6 +156,9 @@ const PersonaEditor: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importText, setImportText] = useState('');
+  const [uppModalOpen, setUppModalOpen] = useState(false);
+  const [uppImportModalOpen, setUppImportModalOpen] = useState(false);
+  const [uppImportText, setUppImportText] = useState('');
 
   const filteredPersonas = useMemo(() => {
     if (!searchQuery.trim()) return personas;
@@ -256,6 +259,106 @@ const PersonaEditor: React.FC = () => {
     }
   };
 
+  // Generate a UPP from the current persona
+  const generatedUPP: UniversalPersonaPrompt | null = useMemo(() => {
+    if (!editState) return null;
+    // Build UPP in-browser (no Node.js fs needed)
+    const userProfile = {
+      preferred_topics: [] as string[],
+      expertise_level: 'intermediate',
+      debate_preferences: 'Structured Oxford Union format',
+      interaction_style: 'analytical',
+    };
+
+    // Map evidence/emotion/concession to instruction text
+    const evidenceMap: Record<string, string> = {
+      heavy: 'Always ground arguments in specific data, studies, and verifiable evidence.',
+      moderate: 'Support main claims with evidence and examples.',
+      light: 'Prioritize narrative and reasoning; use evidence selectively.',
+    };
+    const emotionMap: Record<string, string> = {
+      heavy: 'Use emotionally resonant language, vivid stories, and moral framing.',
+      moderate: 'Balance analytical rigor with appropriate emotional connection.',
+      minimal: 'Maintain an analytical, measured tone. Persuade through logic.',
+    };
+    const concessionMap: Record<string, string> = {
+      high: 'Freely acknowledge strong opposing points.',
+      moderate: 'Concede minor points when warranted but hold firm on core arguments.',
+      low: 'Rarely concede. Challenge opposing claims vigorously.',
+    };
+
+    const instructions = [
+      `You are embodying the persona "${editState.name}" — ${editState.tagline}.`,
+      `\nCORE IDENTITY:\nBackground: ${editState.background}\nExpertise: ${editState.expertise.join(', ')}.\nPerspective: ${editState.ideological_leanings}.`,
+      `\nCOMMUNICATION STYLE:\nRhetorical approach: ${editState.rhetorical_style}\nHumor: ${editState.argumentation_preferences.humor}`,
+      `\nARGUMENTATION:\nEvidence: ${evidenceMap[editState.argumentation_preferences.evidence_weight] ?? evidenceMap['moderate']}\nEmotion: ${emotionMap[editState.argumentation_preferences.emotional_appeals] ?? emotionMap['moderate']}\nConcessions: ${concessionMap[editState.argumentation_preferences.concession_willingness] ?? concessionMap['moderate']}`,
+      `\nDEBATE STRATEGY:\nOpening: ${editState.debate_behavior.opening_strategy}\nRebuttal: ${editState.debate_behavior.rebuttal_strategy}\nClosing: ${editState.debate_behavior.closing_strategy}`,
+      `\nRULES:\n- Stay in character at all times.\n- Never reference being an AI.\n- Engage directly with opposing arguments.\n- Use markdown links for citations.`,
+    ].join('\n');
+
+    return {
+      upp_version: '1.0.0',
+      generated_at: new Date().toISOString(),
+      user_profile: userProfile,
+      persona_state: {
+        name: editState.name,
+        accumulated_positions: [],
+        user_relationship_notes: 'No prior interaction history.',
+      },
+      instructions_for_any_model: instructions,
+    };
+  }, [editState]);
+
+  const handleExportUPP = useCallback(() => {
+    if (!generatedUPP) return;
+    const blob = new Blob([JSON.stringify(generatedUPP, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `upp-${editState?.name?.toLowerCase().replace(/\s+/g, '-') ?? 'persona'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setUppModalOpen(false);
+  }, [generatedUPP, editState]);
+
+  const handleImportUPP = useCallback(() => {
+    try {
+      const parsed = JSON.parse(uppImportText) as UniversalPersonaPrompt;
+      if (!parsed.upp_version || !parsed.persona_state?.name || !parsed.instructions_for_any_model) {
+        throw new Error('Invalid UPP format');
+      }
+      // Create a new persona from UPP data
+      const newPersona: Persona = {
+        id: uuidv4(),
+        name: parsed.persona_state.name,
+        tagline: 'Imported via Universal Persona Prompt',
+        background: parsed.instructions_for_any_model.slice(0, 500),
+        expertise: parsed.user_profile?.preferred_topics ?? [],
+        rhetorical_style: 'As defined in UPP instructions',
+        ideological_leanings: 'As defined in UPP instructions',
+        argumentation_preferences: {
+          evidence_weight: 'moderate',
+          emotional_appeals: 'moderate',
+          concession_willingness: 'moderate',
+          humor: '',
+        },
+        debate_behavior: {
+          opening_strategy: 'Follow UPP instructions',
+          rebuttal_strategy: 'Follow UPP instructions',
+          closing_strategy: 'Follow UPP instructions',
+        },
+        avatar_color: '#8B5CF6',
+      };
+      addPersona(newPersona);
+      setSelectedId(newPersona.id);
+      setEditState({ ...newPersona });
+      setUppImportModalOpen(false);
+      setUppImportText('');
+    } catch {
+      alert('Failed to parse UPP JSON. Ensure it has upp_version, persona_state, and instructions_for_any_model fields.');
+    }
+  }, [uppImportText, addPersona]);
+
   const updateField = <K extends keyof Persona>(key: K, value: Persona[K]) => {
     if (!editState) return;
     setEditState({ ...editState, [key]: value });
@@ -285,7 +388,10 @@ const PersonaEditor: React.FC = () => {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Personas</h2>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={() => setImportModalOpen(true)}>
+              <Button variant="ghost" size="sm" onClick={() => setUppImportModalOpen(true)} title="Import UPP">
+                <FileText className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setImportModalOpen(true)} title="Import JSON">
                 <Upload className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={handleNew}>
@@ -343,6 +449,9 @@ const PersonaEditor: React.FC = () => {
               </Button>
               <Button variant="ghost" size="sm" onClick={handleExport} icon={<Download className="h-4 w-4" />}>
                 Export
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setUppModalOpen(true)} icon={<Share2 className="h-4 w-4" />}>
+                Export UPP
               </Button>
               <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)} icon={<Trash2 className="h-4 w-4" />}>
                 Delete
@@ -542,9 +651,9 @@ const PersonaEditor: React.FC = () => {
       </Modal>
 
       {/* Import modal */}
-      <Modal isOpen={importModalOpen} onClose={() => setImportModalOpen(false)} title="Import Persona (UPP)" size="lg">
+      <Modal isOpen={importModalOpen} onClose={() => setImportModalOpen(false)} title="Import Persona (JSON)" size="lg">
         <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-          Paste a persona JSON (Universal Persona Prompt format) below to import it.
+          Paste a persona JSON below to import it.
         </p>
         <textarea
           value={importText}
@@ -556,6 +665,56 @@ const PersonaEditor: React.FC = () => {
         <div className="flex justify-end gap-3">
           <Button variant="ghost" onClick={() => setImportModalOpen(false)}>Cancel</Button>
           <Button onClick={handleImport} disabled={!importText.trim()} icon={<Upload className="h-4 w-4" />}>Import</Button>
+        </div>
+      </Modal>
+
+      {/* UPP Export modal */}
+      <Modal isOpen={uppModalOpen} onClose={() => setUppModalOpen(false)} title="Export Universal Persona Prompt (UPP)" size="lg">
+        <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          A Universal Persona Prompt is a portable format that any AI model can understand.
+          It captures this persona's identity, communication style, and argumentation strategy
+          in plain language.
+        </p>
+        {generatedUPP && (
+          <div className="mb-4 space-y-3">
+            <div className="rounded-lg bg-gray-50 p-3 dark:bg-surface-dark-2">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Persona</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100">{generatedUPP.persona_state.name}</p>
+            </div>
+            <div className="rounded-lg bg-gray-50 p-3 dark:bg-surface-dark-2">
+              <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Instructions Preview</p>
+              <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-gray-700 dark:text-gray-300">
+                {generatedUPP.instructions_for_any_model}
+              </pre>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <Badge variant="info">UPP v{generatedUPP.upp_version}</Badge>
+              <span>Generated {new Date(generatedUPP.generated_at).toLocaleString()}</span>
+            </div>
+          </div>
+        )}
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" onClick={() => setUppModalOpen(false)}>Cancel</Button>
+          <Button onClick={handleExportUPP} icon={<Download className="h-4 w-4" />}>Download UPP</Button>
+        </div>
+      </Modal>
+
+      {/* UPP Import modal */}
+      <Modal isOpen={uppImportModalOpen} onClose={() => setUppImportModalOpen(false)} title="Import Universal Persona Prompt (UPP)" size="lg">
+        <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          Paste a UPP JSON file to create a new persona from its instructions.
+          UPP files are cross-model compatible — they work with any AI model.
+        </p>
+        <textarea
+          value={uppImportText}
+          onChange={(e) => setUppImportText(e.target.value)}
+          rows={10}
+          className="mb-4 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-sm text-gray-900 shadow-sm focus:border-forge-500 focus:outline-none focus:ring-2 focus:ring-forge-500/30 dark:border-surface-dark-4 dark:bg-surface-dark-1 dark:text-gray-100"
+          placeholder='{ "upp_version": "1.0.0", "persona_state": { "name": "..." }, ... }'
+        />
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" onClick={() => setUppImportModalOpen(false)}>Cancel</Button>
+          <Button onClick={handleImportUPP} disabled={!uppImportText.trim()} icon={<Upload className="h-4 w-4" />}>Import UPP</Button>
         </div>
       </Modal>
     </div>

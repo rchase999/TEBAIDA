@@ -1,22 +1,29 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import clsx from 'clsx';
+import { v4 as uuidv4 } from 'uuid';
 import {
   Trophy, Plus, Swords, Crown, ChevronRight,
   Users, Target, Zap, Star, Clock, ArrowRight,
+  Play, Trash2, RotateCcw,
 } from 'lucide-react';
+import { useStore } from '../../store';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Avatar } from '../../components/Avatar';
 import { Select } from '../../components/Select';
+import { Modal } from '../../components/Modal';
 
 /* ------- Types ------- */
 
 interface TournamentParticipant {
   id: string;
   name: string;
-  model: string;
+  modelId: string;
+  modelDisplayName: string;
+  provider: string;
+  personaName: string;
   color: string;
   wins: number;
   losses: number;
@@ -30,70 +37,170 @@ interface BracketMatch {
   participant2: TournamentParticipant | null;
   winner: TournamentParticipant | null;
   status: 'pending' | 'in-progress' | 'completed';
+  topic?: string;
 }
 
-/* ------- Demo bracket data ------- */
+interface Tournament {
+  id: string;
+  name: string;
+  topic: string;
+  bracketType: 'single-elimination' | 'round-robin';
+  participants: TournamentParticipant[];
+  matches: BracketMatch[];
+  status: 'setup' | 'in-progress' | 'completed';
+  champion: TournamentParticipant | null;
+  createdAt: string;
+}
 
-const DEMO_PARTICIPANTS: TournamentParticipant[] = [
-  { id: '1', name: 'Claude Sonnet', model: 'Anthropic', color: '#D97706', wins: 0, losses: 0 },
-  { id: '2', name: 'GPT-4o', model: 'OpenAI', color: '#10B981', wins: 0, losses: 0 },
-  { id: '3', name: 'Gemini Pro', model: 'Google', color: '#3B82F6', wins: 0, losses: 0 },
-  { id: '4', name: 'Mistral Large', model: 'Mistral', color: '#F97316', wins: 0, losses: 0 },
-  { id: '5', name: 'Llama 3 70B', model: 'Groq', color: '#8B5CF6', wins: 0, losses: 0 },
-  { id: '6', name: 'Claude Opus', model: 'Anthropic', color: '#EF4444', wins: 0, losses: 0 },
-  { id: '7', name: 'GPT-4 Turbo', model: 'OpenAI', color: '#06B6D4', wins: 0, losses: 0 },
-  { id: '8', name: 'Gemini Ultra', model: 'Google', color: '#EC4899', wins: 0, losses: 0 },
-];
+/* ------- Persistence ------- */
+const TOURNAMENTS_KEY = 'debateforge-tournaments';
 
-function buildDemoBracket(): BracketMatch[] {
+function loadTournaments(): Tournament[] {
+  try {
+    const raw = localStorage.getItem(TOURNAMENTS_KEY);
+    if (raw) return JSON.parse(raw) as Tournament[];
+  } catch { /* ignore */ }
+  return [];
+}
+
+function persistTournaments(tournaments: Tournament[]): void {
+  try {
+    localStorage.setItem(TOURNAMENTS_KEY, JSON.stringify(tournaments));
+  } catch { /* ignore */ }
+}
+
+/* ------- Bracket generation ------- */
+
+function generateSingleEliminationBracket(
+  participants: TournamentParticipant[],
+): BracketMatch[] {
   const matches: BracketMatch[] = [];
 
-  // Round 1: Quarterfinals
-  for (let i = 0; i < 4; i++) {
+  // Pad to nearest power of 2
+  const size = Math.pow(2, Math.ceil(Math.log2(Math.max(participants.length, 2))));
+  const padded = [...participants];
+  while (padded.length < size) padded.push(null as any);
+
+  // Shuffle participants
+  const shuffled = [...padded].sort(() => Math.random() - 0.5);
+
+  // Calculate number of rounds
+  const numRounds = Math.ceil(Math.log2(size));
+
+  // Round 1: pair up participants
+  const firstRoundMatchCount = size / 2;
+  for (let i = 0; i < firstRoundMatchCount; i++) {
+    const p1 = shuffled[i * 2] ?? null;
+    const p2 = shuffled[i * 2 + 1] ?? null;
+
+    // If one slot is a bye (null), auto-advance
+    const isBye = !p1 || !p2;
+    const winner = isBye ? (p1 ?? p2) : null;
+
     matches.push({
       id: `r1-${i}`,
       round: 1,
       position: i,
-      participant1: DEMO_PARTICIPANTS[i * 2] ?? null,
-      participant2: DEMO_PARTICIPANTS[i * 2 + 1] ?? null,
-      winner: null,
-      status: 'pending',
+      participant1: p1,
+      participant2: p2,
+      winner,
+      status: isBye ? 'completed' : 'pending',
     });
   }
 
-  // Round 2: Semifinals
-  for (let i = 0; i < 2; i++) {
-    matches.push({
-      id: `r2-${i}`,
-      round: 2,
-      position: i,
-      participant1: null,
-      participant2: null,
-      winner: null,
-      status: 'pending',
-    });
+  // Subsequent rounds
+  for (let round = 2; round <= numRounds; round++) {
+    const prevRoundMatchCount = Math.pow(2, numRounds - round + 1) / 2;
+    const thisRoundMatchCount = prevRoundMatchCount / 2;
+    for (let i = 0; i < thisRoundMatchCount; i++) {
+      matches.push({
+        id: `r${round}-${i}`,
+        round,
+        position: i,
+        participant1: null,
+        participant2: null,
+        winner: null,
+        status: 'pending',
+      });
+    }
   }
 
-  // Round 3: Finals
-  matches.push({
-    id: 'r3-0',
-    round: 3,
-    position: 0,
-    participant1: null,
-    participant2: null,
-    winner: null,
-    status: 'pending',
-  });
+  // Propagate byes
+  propagateWinners(matches, numRounds);
 
   return matches;
 }
+
+function propagateWinners(matches: BracketMatch[], numRounds: number): void {
+  for (let round = 1; round < numRounds; round++) {
+    const roundMatches = matches.filter((m) => m.round === round);
+    const nextRoundMatches = matches.filter((m) => m.round === round + 1);
+
+    for (let i = 0; i < roundMatches.length; i++) {
+      const match = roundMatches[i];
+      if (match.winner) {
+        const nextMatchIdx = Math.floor(i / 2);
+        const nextMatch = nextRoundMatches[nextMatchIdx];
+        if (nextMatch) {
+          if (i % 2 === 0) {
+            nextMatch.participant1 = match.winner;
+          } else {
+            nextMatch.participant2 = match.winner;
+          }
+          // If both slots filled with one being null (bye), auto-advance
+          if (nextMatch.participant1 && !nextMatch.participant2) {
+            // Wait for the other match
+          } else if (!nextMatch.participant1 && nextMatch.participant2) {
+            // Wait for the other match
+          }
+        }
+      }
+    }
+  }
+}
+
+function generateRoundRobinBracket(
+  participants: TournamentParticipant[],
+): BracketMatch[] {
+  const matches: BracketMatch[] = [];
+  let matchNum = 0;
+
+  for (let i = 0; i < participants.length; i++) {
+    for (let j = i + 1; j < participants.length; j++) {
+      matches.push({
+        id: `rr-${matchNum}`,
+        round: 1,
+        position: matchNum,
+        participant1: participants[i],
+        participant2: participants[j],
+        winner: null,
+        status: 'pending',
+      });
+      matchNum++;
+    }
+  }
+
+  return matches;
+}
+
+/* ------- Available models ------- */
+const AVAILABLE_MODELS = [
+  { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', provider: 'Anthropic', color: '#D97706' },
+  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', color: '#10B981' },
+  { id: 'gemini-pro', name: 'Gemini Pro', provider: 'Google', color: '#3B82F6' },
+  { id: 'mistral-large-latest', name: 'Mistral Large', provider: 'Mistral', color: '#F97316' },
+  { id: 'llama3-groq-70b-8192-tool-use-preview', name: 'Llama 3 70B', provider: 'Groq', color: '#8B5CF6' },
+  { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', color: '#EF4444' },
+  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'OpenAI', color: '#06B6D4' },
+];
 
 /* ------- Match Card ------- */
 
 const MatchCard: React.FC<{
   match: BracketMatch;
   compact?: boolean;
-}> = ({ match, compact }) => {
+  onSetWinner?: (matchId: string, winner: TournamentParticipant) => void;
+}> = ({ match, compact, onSetWinner }) => {
   const statusColors: Record<string, string> = {
     pending: 'border-gray-200 dark:border-surface-dark-3',
     'in-progress': 'border-forge-400 dark:border-forge-600 ring-2 ring-forge-500/20',
@@ -107,23 +214,28 @@ const MatchCard: React.FC<{
       compact ? 'min-w-[180px]' : 'min-w-[220px]',
     )}>
       {/* Slot 1 */}
-      <div className={clsx(
-        'flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors',
-        match.winner?.id === match.participant1?.id && 'bg-emerald-50 dark:bg-emerald-900/20',
-      )}>
+      <button
+        disabled={match.status === 'completed' || !match.participant1 || !onSetWinner}
+        onClick={() => match.participant1 && onSetWinner?.(match.id, match.participant1)}
+        className={clsx(
+          'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-colors text-left',
+          match.winner?.id === match.participant1?.id && 'bg-emerald-50 dark:bg-emerald-900/20',
+          match.status !== 'completed' && match.participant1 && onSetWinner && 'hover:bg-gray-50 dark:hover:bg-surface-dark-2 cursor-pointer',
+        )}
+      >
         {match.participant1 ? (
           <>
             <Avatar name={match.participant1.name} color={match.participant1.color} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{match.participant1.name}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{match.participant1.model}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{match.participant1.provider}</p>
             </div>
             {match.winner?.id === match.participant1.id && <Crown className="h-4 w-4 text-amber-500 shrink-0" />}
           </>
         ) : (
           <p className="text-sm text-gray-400 dark:text-gray-500 italic">TBD</p>
         )}
-      </div>
+      </button>
 
       {/* Divider */}
       <div className="my-1 flex items-center gap-2 px-2">
@@ -133,23 +245,28 @@ const MatchCard: React.FC<{
       </div>
 
       {/* Slot 2 */}
-      <div className={clsx(
-        'flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors',
-        match.winner?.id === match.participant2?.id && 'bg-emerald-50 dark:bg-emerald-900/20',
-      )}>
+      <button
+        disabled={match.status === 'completed' || !match.participant2 || !onSetWinner}
+        onClick={() => match.participant2 && onSetWinner?.(match.id, match.participant2)}
+        className={clsx(
+          'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-colors text-left',
+          match.winner?.id === match.participant2?.id && 'bg-emerald-50 dark:bg-emerald-900/20',
+          match.status !== 'completed' && match.participant2 && onSetWinner && 'hover:bg-gray-50 dark:hover:bg-surface-dark-2 cursor-pointer',
+        )}
+      >
         {match.participant2 ? (
           <>
             <Avatar name={match.participant2.name} color={match.participant2.color} size="sm" />
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{match.participant2.name}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{match.participant2.model}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{match.participant2.provider}</p>
             </div>
             {match.winner?.id === match.participant2.id && <Crown className="h-4 w-4 text-amber-500 shrink-0" />}
           </>
         ) : (
           <p className="text-sm text-gray-400 dark:text-gray-500 italic">TBD</p>
         )}
-      </div>
+      </button>
 
       {/* Status */}
       <div className="mt-2 flex justify-center">
@@ -167,23 +284,197 @@ const MatchCard: React.FC<{
 /* ------- Main component ------- */
 
 const TournamentView: React.FC = () => {
+  const setCurrentView = useStore((s) => s.setCurrentView);
+  const [tournaments, setTournaments] = useState<Tournament[]>(loadTournaments);
+  const [activeTournamentId, setActiveTournamentId] = useState<string | null>(
+    () => tournaments.find((t) => t.status !== 'completed')?.id ?? tournaments[0]?.id ?? null,
+  );
   const [showCreateUI, setShowCreateUI] = useState(false);
   const [topic, setTopic] = useState('');
+  const [tournamentName, setTournamentName] = useState('');
   const [bracketType, setBracketType] = useState<'single-elimination' | 'round-robin'>('single-elimination');
+  const [selectedModels, setSelectedModels] = useState<string[]>([
+    AVAILABLE_MODELS[0].id,
+    AVAILABLE_MODELS[1].id,
+    AVAILABLE_MODELS[2].id,
+    AVAILABLE_MODELS[3].id,
+  ]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const demoMatches = useMemo(() => buildDemoBracket(), []);
+  const activeTournament = useMemo(
+    () => tournaments.find((t) => t.id === activeTournamentId) ?? null,
+    [tournaments, activeTournamentId],
+  );
 
-  const roundLabels = ['Quarterfinals', 'Semifinals', 'Finals'];
+  const updateTournament = useCallback((updated: Tournament) => {
+    setTournaments((prev) => {
+      const next = prev.map((t) => (t.id === updated.id ? updated : t));
+      persistTournaments(next);
+      return next;
+    });
+  }, []);
 
-  // Group matches by round
+  const handleCreateTournament = useCallback(() => {
+    if (!topic.trim() || selectedModels.length < 2) return;
+
+    const participants: TournamentParticipant[] = selectedModels.map((modelId) => {
+      const model = AVAILABLE_MODELS.find((m) => m.id === modelId) ?? AVAILABLE_MODELS[0];
+      return {
+        id: uuidv4(),
+        name: model.name,
+        modelId: model.id,
+        modelDisplayName: model.name,
+        provider: model.provider,
+        personaName: 'Default',
+        color: model.color,
+        wins: 0,
+        losses: 0,
+      };
+    });
+
+    const matches = bracketType === 'single-elimination'
+      ? generateSingleEliminationBracket(participants)
+      : generateRoundRobinBracket(participants);
+
+    const tournament: Tournament = {
+      id: uuidv4(),
+      name: tournamentName.trim() || `Tournament: ${topic.slice(0, 50)}`,
+      topic,
+      bracketType,
+      participants,
+      matches,
+      status: 'in-progress',
+      champion: null,
+      createdAt: new Date().toISOString(),
+    };
+
+    setTournaments((prev) => {
+      const next = [tournament, ...prev];
+      persistTournaments(next);
+      return next;
+    });
+    setActiveTournamentId(tournament.id);
+    setShowCreateUI(false);
+    setTopic('');
+    setTournamentName('');
+  }, [topic, tournamentName, bracketType, selectedModels]);
+
+  const handleSetWinner = useCallback((matchId: string, winner: TournamentParticipant) => {
+    if (!activeTournament) return;
+
+    const updatedMatches = activeTournament.matches.map((m) => {
+      if (m.id === matchId) {
+        return { ...m, winner, status: 'completed' as const };
+      }
+      return m;
+    });
+
+    // Update participant records
+    const match = updatedMatches.find((m) => m.id === matchId)!;
+    const loser = match.participant1?.id === winner.id ? match.participant2 : match.participant1;
+    const updatedParticipants = activeTournament.participants.map((p) => {
+      if (p.id === winner.id) return { ...p, wins: p.wins + 1 };
+      if (p.id === loser?.id) return { ...p, losses: p.losses + 1 };
+      return p;
+    });
+
+    // For single-elimination, advance winner to next round
+    if (activeTournament.bracketType === 'single-elimination') {
+      const matchObj = activeTournament.matches.find((m) => m.id === matchId)!;
+      const nextRound = matchObj.round + 1;
+      const nextPosition = Math.floor(matchObj.position / 2);
+      const nextMatch = updatedMatches.find(
+        (m) => m.round === nextRound && m.position === nextPosition,
+      );
+      if (nextMatch) {
+        if (matchObj.position % 2 === 0) {
+          nextMatch.participant1 = winner;
+        } else {
+          nextMatch.participant2 = winner;
+        }
+      }
+    }
+
+    // Check if tournament is complete
+    const allDone = updatedMatches.every((m) => m.status === 'completed');
+    let champion: TournamentParticipant | null = null;
+    let status = activeTournament.status;
+
+    if (allDone) {
+      status = 'completed';
+      if (activeTournament.bracketType === 'single-elimination') {
+        const finalMatch = updatedMatches.find(
+          (m) => m.round === Math.max(...updatedMatches.map((x) => x.round)),
+        );
+        champion = finalMatch?.winner ?? null;
+      } else {
+        // Round robin: most wins
+        const sorted = [...updatedParticipants].sort((a, b) => b.wins - a.wins);
+        champion = sorted[0] ?? null;
+      }
+    }
+
+    updateTournament({
+      ...activeTournament,
+      matches: updatedMatches,
+      participants: updatedParticipants,
+      status,
+      champion,
+    });
+  }, [activeTournament, updateTournament]);
+
+  const handleDeleteTournament = useCallback(() => {
+    if (!activeTournamentId) return;
+    setTournaments((prev) => {
+      const next = prev.filter((t) => t.id !== activeTournamentId);
+      persistTournaments(next);
+      return next;
+    });
+    setActiveTournamentId(null);
+    setShowDeleteModal(false);
+  }, [activeTournamentId]);
+
+  const handleResetTournament = useCallback(() => {
+    if (!activeTournament) return;
+    const matches = activeTournament.bracketType === 'single-elimination'
+      ? generateSingleEliminationBracket(activeTournament.participants.map((p) => ({ ...p, wins: 0, losses: 0 })))
+      : generateRoundRobinBracket(activeTournament.participants.map((p) => ({ ...p, wins: 0, losses: 0 })));
+
+    updateTournament({
+      ...activeTournament,
+      matches,
+      participants: activeTournament.participants.map((p) => ({ ...p, wins: 0, losses: 0 })),
+      status: 'in-progress',
+      champion: null,
+    });
+  }, [activeTournament, updateTournament]);
+
+  const toggleModelSelection = useCallback((modelId: string) => {
+    setSelectedModels((prev) =>
+      prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId],
+    );
+  }, []);
+
+  // Group matches by round for display
   const rounds = useMemo(() => {
+    if (!activeTournament) return [];
+    const matches = activeTournament.matches;
+    const maxRound = Math.max(...matches.map((m) => m.round), 0);
     const grouped: BracketMatch[][] = [];
-    const maxRound = Math.max(...demoMatches.map((m) => m.round));
     for (let r = 1; r <= maxRound; r++) {
-      grouped.push(demoMatches.filter((m) => m.round === r));
+      grouped.push(matches.filter((m) => m.round === r));
     }
     return grouped;
-  }, [demoMatches]);
+  }, [activeTournament]);
+
+  const getRoundLabel = (roundIdx: number, totalRounds: number): string => {
+    if (activeTournament?.bracketType === 'round-robin') return 'All Matches';
+    if (totalRounds === 1) return 'Finals';
+    if (roundIdx === totalRounds - 1) return 'Finals';
+    if (roundIdx === totalRounds - 2) return 'Semifinals';
+    if (roundIdx === totalRounds - 3) return 'Quarterfinals';
+    return `Round ${roundIdx + 1}`;
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
@@ -195,18 +486,16 @@ const TournamentView: React.FC = () => {
               <Trophy className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Tournament Mode</h1>
-            <Badge variant="warning">Coming Soon</Badge>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Organize multi-round debate tournaments with bracket displays and leaderboards.
+            Organize multi-round debate tournaments. Click a participant to declare them the winner.
           </p>
         </div>
         <Button
-          variant="outline"
           onClick={() => setShowCreateUI(!showCreateUI)}
           icon={<Plus className="h-4 w-4" />}
         >
-          Create Tournament
+          New Tournament
         </Button>
       </div>
 
@@ -214,9 +503,15 @@ const TournamentView: React.FC = () => {
       {showCreateUI && (
         <Card className="mb-8 space-y-4">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">New Tournament</h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Input
-              label="Topic"
+              label="Tournament Name"
+              value={tournamentName}
+              onChange={(e) => setTournamentName(e.target.value)}
+              placeholder="Optional name..."
+            />
+            <Input
+              label="Debate Topic"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Enter the debate topic..."
@@ -231,129 +526,263 @@ const TournamentView: React.FC = () => {
               onChange={(e) => setBracketType(e.target.value as any)}
             />
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-            <Users className="h-4 w-4" />
-            <span>Add participants by configuring debaters in the Setup Wizard, then assign them here.</span>
+
+          <div>
+            <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Select Participants ({selectedModels.length} selected, min 2)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {AVAILABLE_MODELS.map((model) => {
+                const selected = selectedModels.includes(model.id);
+                return (
+                  <button
+                    key={model.id}
+                    onClick={() => toggleModelSelection(model.id)}
+                    className={clsx(
+                      'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all',
+                      selected
+                        ? 'border-forge-500 bg-forge-50 text-forge-700 ring-1 ring-forge-500/30 dark:border-forge-500 dark:bg-forge-900/20 dark:text-forge-300'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300 dark:border-surface-dark-4 dark:text-gray-300 dark:hover:border-surface-dark-3',
+                    )}
+                  >
+                    <Avatar name={model.name} color={model.color} size="sm" />
+                    <div className="text-left">
+                      <p className="font-medium">{model.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{model.provider}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => setShowCreateUI(false)}>Cancel</Button>
-            <Button disabled icon={<Swords className="h-4 w-4" />}>
+            <Button
+              onClick={handleCreateTournament}
+              disabled={!topic.trim() || selectedModels.length < 2}
+              icon={<Swords className="h-4 w-4" />}
+            >
               Start Tournament
             </Button>
           </div>
         </Card>
       )}
 
-      {/* Feature preview cards */}
-      <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {[
-          { icon: Target, title: 'Single Elimination', desc: 'Classic bracket - lose once and you are out. Fast and decisive.', color: 'text-red-500' },
-          { icon: Zap, title: 'Round Robin', desc: 'Every debater faces every other. Most comprehensive ranking.', color: 'text-amber-500' },
-          { icon: Star, title: 'Leaderboard', desc: 'Track wins, losses, and overall scores across all matches.', color: 'text-emerald-500' },
-        ].map((f) => (
-          <Card key={f.title} className="flex items-start gap-3">
-            <f.icon className={clsx('mt-0.5 h-5 w-5 shrink-0', f.color)} />
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-gray-100">{f.title}</h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{f.desc}</p>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {/* Tournament selector */}
+      {tournaments.length > 0 && (
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          {tournaments.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTournamentId(t.id)}
+              className={clsx(
+                'rounded-lg border px-3 py-2 text-sm transition-all',
+                activeTournamentId === t.id
+                  ? 'border-forge-500 bg-forge-50 text-forge-700 dark:border-forge-500 dark:bg-forge-900/20 dark:text-forge-300'
+                  : 'border-gray-200 text-gray-600 hover:border-gray-300 dark:border-surface-dark-4 dark:text-gray-400',
+              )}
+            >
+              <span className="font-medium">{t.name}</span>
+              <span className="ml-2">
+                <Badge
+                  variant={t.status === 'completed' ? 'success' : t.status === 'in-progress' ? 'info' : 'default'}
+                  size="sm"
+                >
+                  {t.status}
+                </Badge>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Bracket Preview */}
-      <section className="mb-10">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Example Bracket Preview
-        </h2>
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-surface-dark-3 dark:bg-surface-dark-1">
-          <div className="flex items-center gap-8 min-w-max">
-            {rounds.map((roundMatches, roundIdx) => (
-              <div key={roundIdx} className="flex flex-col items-center gap-2">
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  {roundLabels[roundIdx] ?? `Round ${roundIdx + 1}`}
-                </h3>
-                <div className="flex flex-col gap-6" style={{ justifyContent: 'space-around', minHeight: roundIdx === 0 ? 'auto' : `${roundMatches.length * 160}px` }}>
-                  {roundMatches.map((match) => (
-                    <MatchCard key={match.id} match={match} />
+      {/* Active Tournament */}
+      {activeTournament ? (
+        <>
+          {/* Tournament info bar */}
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 dark:border-surface-dark-3 dark:bg-surface-dark-1">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{activeTournament.name}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Topic: {activeTournament.topic} | {activeTournament.bracketType === 'single-elimination' ? 'Single Elimination' : 'Round Robin'} | {activeTournament.participants.length} participants
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {activeTournament.status === 'completed' && activeTournament.champion && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 dark:bg-amber-900/20">
+                  <Crown className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    Champion: {activeTournament.champion.name}
+                  </span>
+                </div>
+              )}
+              <Button variant="ghost" size="sm" onClick={handleResetTournament} icon={<RotateCcw className="h-4 w-4" />}>
+                Reset
+              </Button>
+              <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)} icon={<Trash2 className="h-4 w-4" />}>
+                Delete
+              </Button>
+            </div>
+          </div>
+
+          {/* Bracket Display */}
+          <section className="mb-10">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {activeTournament.bracketType === 'single-elimination' ? 'Bracket' : 'Matches'}
+            </h2>
+            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-gray-50 p-6 dark:border-surface-dark-3 dark:bg-surface-dark-1">
+              {activeTournament.bracketType === 'single-elimination' ? (
+                <div className="flex items-center gap-8 min-w-max">
+                  {rounds.map((roundMatches, roundIdx) => (
+                    <div key={roundIdx} className="flex flex-col items-center gap-2">
+                      <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {getRoundLabel(roundIdx, rounds.length)}
+                      </h3>
+                      <div
+                        className="flex flex-col gap-6"
+                        style={{
+                          justifyContent: 'space-around',
+                          minHeight: roundIdx === 0 ? 'auto' : `${rounds[0].length * 130}px`,
+                        }}
+                      >
+                        {roundMatches.map((match) => (
+                          <MatchCard
+                            key={match.id}
+                            match={match}
+                            onSetWinner={activeTournament.status !== 'completed' ? handleSetWinner : undefined}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Champion slot */}
+                  <div className="flex flex-col items-center gap-2">
+                    <h3 className="mb-3 text-sm font-semibold text-amber-600 dark:text-amber-400">Champion</h3>
+                    <div className={clsx(
+                      'flex flex-col items-center gap-3 rounded-xl border-2 p-6',
+                      activeTournament.champion
+                        ? 'border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/20'
+                        : 'border-dashed border-amber-300 bg-amber-50/50 dark:border-amber-700 dark:bg-amber-900/10',
+                    )}>
+                      {activeTournament.champion ? (
+                        <>
+                          <Avatar name={activeTournament.champion.name} color={activeTournament.champion.color} size="lg" />
+                          <p className="font-semibold text-gray-900 dark:text-gray-100">{activeTournament.champion.name}</p>
+                          <Crown className="h-6 w-6 text-amber-500" />
+                        </>
+                      ) : (
+                        <>
+                          <Crown className="h-8 w-8 text-amber-400/50" />
+                          <p className="text-sm font-medium text-gray-400 dark:text-gray-500">TBD</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Round Robin — grid of matches */
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {activeTournament.matches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      onSetWinner={activeTournament.status !== 'completed' ? handleSetWinner : undefined}
+                    />
                   ))}
                 </div>
-              </div>
-            ))}
-
-            {/* Champion slot */}
-            <div className="flex flex-col items-center gap-2">
-              <h3 className="mb-3 text-sm font-semibold text-amber-600 dark:text-amber-400">Champion</h3>
-              <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50 p-6 dark:border-amber-700 dark:bg-amber-900/10">
-                <Crown className="h-8 w-8 text-amber-500" />
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">TBD</p>
-              </div>
+              )}
             </div>
-          </div>
+          </section>
+
+          {/* Standings */}
+          <section>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Standings</h2>
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-surface-dark-3">
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Rank</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Participant</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Provider</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">W</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">L</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                    {[...activeTournament.participants]
+                      .sort((a, b) => b.wins - a.wins || a.losses - b.losses)
+                      .map((p, idx) => (
+                        <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-surface-dark-2 transition-colors">
+                          <td className="px-4 py-3">
+                            <span className={clsx(
+                              'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
+                              idx === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                              idx === 1 ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' :
+                              idx === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                              'text-gray-500 dark:text-gray-400',
+                            )}>
+                              {idx + 1}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <Avatar name={p.name} color={p.color} size="sm" />
+                              <span className="font-medium text-gray-900 dark:text-gray-100">{p.name}</span>
+                              {activeTournament.champion?.id === p.id && (
+                                <Crown className="h-4 w-4 text-amber-500" />
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{p.provider}</td>
+                          <td className="px-4 py-3 text-center text-sm font-medium text-emerald-600 dark:text-emerald-400">{p.wins}</td>
+                          <td className="px-4 py-3 text-center text-sm font-medium text-red-500 dark:text-red-400">{p.losses}</td>
+                          <td className="px-4 py-3 text-center">
+                            <Badge variant={
+                              activeTournament.champion?.id === p.id ? 'success' :
+                              p.losses > 0 && activeTournament.bracketType === 'single-elimination' ? 'error' :
+                              'default'
+                            }>
+                              {activeTournament.champion?.id === p.id ? 'Champion' :
+                               p.losses > 0 && activeTournament.bracketType === 'single-elimination' ? 'Eliminated' :
+                               'Active'}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </section>
+        </>
+      ) : (
+        /* No tournaments yet */
+        <div className="mt-12 rounded-2xl border-2 border-dashed border-gray-300 p-10 text-center dark:border-surface-dark-4">
+          <Trophy className="mx-auto mb-4 h-10 w-10 text-gray-400 dark:text-gray-500" />
+          <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-gray-300">No tournaments yet</h3>
+          <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            Create a tournament to pit AI models against each other in bracket-style elimination.
+          </p>
+          <Button onClick={() => setShowCreateUI(true)} icon={<Plus className="h-4 w-4" />}>
+            Create Tournament
+          </Button>
         </div>
-      </section>
+      )}
 
-      {/* Leaderboard Preview */}
-      <section>
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Leaderboard
-        </h2>
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-surface-dark-3">
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Rank</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Participant</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Model</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">W</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">L</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-surface-dark-3">
-                {DEMO_PARTICIPANTS.map((p, idx) => (
-                  <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-surface-dark-2 transition-colors">
-                    <td className="px-4 py-3">
-                      <span className={clsx(
-                        'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
-                        idx === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                        idx === 1 ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' :
-                        idx === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                        'text-gray-500 dark:text-gray-400',
-                      )}>
-                        {idx + 1}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar name={p.name} color={p.color} size="sm" />
-                        <span className="font-medium text-gray-900 dark:text-gray-100">{p.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{p.model}</td>
-                    <td className="px-4 py-3 text-center text-sm font-medium text-emerald-600 dark:text-emerald-400">{p.wins}</td>
-                    <td className="px-4 py-3 text-center text-sm font-medium text-red-500 dark:text-red-400">{p.losses}</td>
-                    <td className="px-4 py-3 text-center">
-                      <Badge variant="default">Waiting</Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </section>
-
-      {/* Roadmap note */}
-      <div className="mt-10 rounded-xl border border-amber-200 bg-amber-50 p-5 text-center dark:border-amber-800 dark:bg-amber-900/10">
-        <Trophy className="mx-auto mb-3 h-8 w-8 text-amber-500" />
-        <h3 className="mb-1 font-semibold text-amber-800 dark:text-amber-300">Tournament Mode is on the Roadmap</h3>
-        <p className="text-sm text-amber-700 dark:text-amber-400">
-          Full tournament functionality with automated bracket management, scoring, and champion tracking is coming in a future release.
-          The bracket UI above shows the planned design and layout.
+      {/* Delete confirmation modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Tournament">
+        <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          Are you sure you want to delete <strong>{activeTournament?.name}</strong>? This action cannot be undone.
         </p>
-      </div>
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+          <Button variant="danger" onClick={handleDeleteTournament}>Delete</Button>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -455,10 +455,11 @@ DEBATEFORGE_GOOGLE_KEY=AI...
 - [x] Logical fallacy detection overlay
 - [x] Post-debate opinion shift tracking
 - [x] Enhanced debate history with matchup display
-- [ ] Universal Persona Prompt (UPP) v1.0
-- [ ] Tournament mode with ELO-style rankings
+- [x] Universal Persona Prompt (UPP) v1.0 — export/import cross-model persona prompts
+- [x] Tournament mode — functional brackets with single-elimination & round-robin
+- [x] Voice synthesis — TTS with per-debater voice assignment (Web Speech API)
+- [x] Keyboard shortcuts — Space (pause), Enter (continue), Escape (stop), V (voice)
 - [ ] Audience mode — invite friends to vote on debate winners
-- [ ] Voice synthesis — hear debaters speak their arguments (TTS integration)
 - [ ] Multilingual debate support
 - [ ] Plugin system for custom debate formats
 - [ ] Linux and macOS builds
