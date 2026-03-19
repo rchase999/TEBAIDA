@@ -468,7 +468,11 @@ DEBATEFORGE_GOOGLE_KEY=AI...
 - [x] Turn timer — live elapsed time display during generation
 - [x] Auto-topic generator — 18 curated topics with random selection
 - [x] Format selection — choose Oxford Union, Lincoln-Douglas, or Parliamentary in setup
-- [ ] Linux and macOS builds
+- [x] Linux and macOS builds — electron-builder targets for DMG, AppImage, deb
+- [x] Debate bookmarks — save and navigate to key moments
+- [x] Notification sounds — audio cues for turn completion, agent switch, debate end
+- [x] Multi-format engine fix — engine now uses each format's own turn sequence
+- [x] Comprehensive test suite — 161 tests across 13 files
 
 ---
 

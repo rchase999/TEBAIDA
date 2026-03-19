@@ -28,6 +28,8 @@ import { FallacyDetector } from '../../../core/fallacy_detector/index';
 import { calculateMomentum } from '../../../core/momentum/index';
 import { calculateScores } from '../../../utils/scoring';
 import { VoiceSynthesisControls, SpeakButton, useVoiceSynthesis } from '../../components/VoiceSynthesis';
+import { BookmarkButton, BookmarksPanel, useBookmarks } from '../../components/DebateBookmarks';
+import { playTurnComplete, playAgentSwitch, playDebateComplete } from '../../components/NotificationSound';
 import type { DebateScore } from '../../../types';
 import type { DebateTurn, DebaterConfig, DetectedFallacy, Citation, Debate, DebatePhase, UserComment, OpinionValue, MomentumPoint } from '../../../types';
 
@@ -223,9 +225,11 @@ interface TurnBubbleProps {
   onReact: (turnId: string, emoji: string, event: React.MouseEvent) => void;
   ttsEnabled?: boolean;
   voiceAssignment?: import('../../components/VoiceSynthesis').VoiceAssignment;
+  bookmarked?: boolean;
+  onBookmarkToggle?: (data: any) => void;
 }
 
-const TurnBubble: React.FC<TurnBubbleProps> = ({ turn, role, stepNumber, totalSteps, debater, onCitationClick, reactionCounts, onReact, ttsEnabled, voiceAssignment }) => {
+const TurnBubble: React.FC<TurnBubbleProps> = ({ turn, role, stepNumber, totalSteps, debater, onCitationClick, reactionCounts, onReact, ttsEnabled, voiceAssignment, bookmarked, onBookmarkToggle }) => {
   const colors = ROLE_COLORS[role];
   const isHousemaster = role === 'housemaster';
   const isVerdict = turn.phase === 'verdict';
@@ -405,10 +409,21 @@ const TurnBubble: React.FC<TurnBubbleProps> = ({ turn, role, stepNumber, totalSt
           )}
         </div>
 
-        {/* Reactions + TTS */}
+        {/* Reactions + TTS + Bookmark */}
         <div className="flex items-center gap-2">
           <ReactionBar turnId={turn.id} counts={reactionCounts} onReact={onReact} />
           <SpeakButton text={turn.content} voiceAssignment={voiceAssignment} enabled={!!ttsEnabled} />
+          {onBookmarkToggle && (
+            <BookmarkButton
+              turnId={turn.id}
+              turnIndex={stepNumber - 1}
+              debaterName={turn.debaterName}
+              role={role}
+              phase={turn.phase}
+              isBookmarked={!!bookmarked}
+              onToggle={onBookmarkToggle}
+            />
+          )}
         </div>
 
         <p className={clsx('mt-1 text-xs text-gray-400 dark:text-gray-500', !isProposition && 'text-right')}>
@@ -668,6 +683,24 @@ const DebateView: React.FC = () => {
   const handleAudienceReset = useCallback(() => {
     setAudienceVotes({ for: 0, against: 0, undecided: 0 });
   }, []);
+
+  /* ── Feature 10: Debate Bookmarks ── */
+  const { bookmarks, isBookmarked, toggleBookmark, removeBookmark, updateNote } = useBookmarks();
+
+  /* ── Feature 11: Notification Sounds ── */
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const prevTurnCountRef = useRef(0);
+  useEffect(() => {
+    if (!soundEnabled || !currentDebate) return;
+    const turnCount = currentDebate.turns?.length ?? 0;
+    if (turnCount > prevTurnCountRef.current && prevTurnCountRef.current > 0) {
+      playTurnComplete();
+      if (currentDebate.status === 'completed') {
+        setTimeout(playDebateComplete, 300);
+      }
+    }
+    prevTurnCountRef.current = turnCount;
+  }, [currentDebate?.turns?.length, currentDebate?.status, soundEnabled]);
 
   // Calculate momentum data from current turns
   const momentumData: MomentumPoint[] = useMemo(() => {
@@ -1258,6 +1291,21 @@ const DebateView: React.FC = () => {
         )}
 
         {/* Transcript */}
+        {/* Bookmarks Panel */}
+        {bookmarks.length > 0 && (
+          <div className="border-b border-gray-200 px-5 py-2 dark:border-surface-dark-3">
+            <BookmarksPanel
+              bookmarks={bookmarks}
+              onRemove={removeBookmark}
+              onNavigate={(turnIndex) => {
+                const el = scrollRef.current?.children?.[turnIndex];
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+              onUpdateNote={updateNote}
+            />
+          </div>
+        )}
+
         <div ref={scrollRef} className="flex-1 overflow-auto px-5 py-6 space-y-6">
           {turns.length === 0 && !streamingContent && (
             <div className="flex h-full items-center justify-center text-center">
@@ -1296,6 +1344,8 @@ const DebateView: React.FC = () => {
                   onReact={handleReact}
                   ttsEnabled={tts.enabled}
                   voiceAssignment={tts.voiceAssignments[turn.debaterId]}
+                  bookmarked={isBookmarked(turn.id)}
+                  onBookmarkToggle={toggleBookmark}
                 />
                 {/* Inline user comments that were added after this turn */}
                 {turnComments.map((comment, ci) => (

@@ -92,19 +92,21 @@ export class DebateEngine {
    */
   getCurrentTurnInfo(debate: Debate): CurrentTurnInfo {
     const stepIndex = debate.turns.length;
+    // Use the debate's format turn sequence (supports all formats, not just Oxford Union)
+    const sequence = debate.format?.turnSequence ?? TURN_SEQUENCE;
 
-    if (stepIndex >= TURN_SEQUENCE.length) {
+    if (stepIndex >= sequence.length) {
       // Debate is complete; return the last step info
-      const lastStep = TURN_SEQUENCE[TURN_SEQUENCE.length - 1];
+      const lastStep = sequence[sequence.length - 1];
       return {
-        stepIndex: TURN_SEQUENCE.length - 1,
+        stepIndex: sequence.length - 1,
         phase: lastStep.phase,
         role: lastStep.role,
         debaterId: this.getDebaterIdForRole(debate, lastStep.role),
       };
     }
 
-    const step = TURN_SEQUENCE[stepIndex];
+    const step = sequence[stepIndex];
     return {
       stepIndex,
       phase: step.phase,
@@ -216,15 +218,16 @@ export class DebateEngine {
     }
 
     // Determine the next step based on completed turns
+    const sequence = debate.format?.turnSequence ?? TURN_SEQUENCE;
     const nextStepIndex = debate.turns.length;
 
-    if (nextStepIndex >= TURN_SEQUENCE.length) {
+    if (nextStepIndex >= sequence.length) {
       debate.status = 'completed';
       debate.updatedAt = new Date().toISOString();
       return debate;
     }
 
-    const nextStep = TURN_SEQUENCE[nextStepIndex];
+    const nextStep = sequence[nextStepIndex];
     const nextDebaterId = this.getDebaterIdForRole(debate, nextStep.role);
     const nextDebater = debate.debaters.find((d) => d.id === nextDebaterId);
 
@@ -247,7 +250,8 @@ export class DebateEngine {
       return true;
     }
 
-    return debate.turns.length >= TURN_SEQUENCE.length;
+    const sequenceLength = debate.format?.turnSequence?.length ?? TURN_SEQUENCE.length;
+    return debate.turns.length >= sequenceLength;
   }
 
   /**

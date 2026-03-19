@@ -12,6 +12,10 @@
     "build:renderer": "vite build",
     "start": "electron dist/main/main.js",
     "package": "electron-builder",
+    "package:win": "electron-builder --win",
+    "package:mac": "electron-builder --mac",
+    "package:linux": "electron-builder --linux",
+    "package:all": "electron-builder --win --mac --linux",
     "lint": "eslint src --ext .ts,.tsx",
     "test": "vitest run"
   },
@@ -57,9 +61,27 @@
     ],
     "win": {
       "target": [
-        "nsis"
+        "nsis",
+        "portable"
       ],
       "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.education"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icon.png",
+      "category": "Education",
+      "maintainer": "DebateForge Team"
     }
   }
 }
