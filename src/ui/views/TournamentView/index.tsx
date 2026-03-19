@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import clsx from 'clsx';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Trophy, Plus, Swords, Crown, ChevronRight,
   Users, Target, Zap, Star, Clock, ArrowRight,
-  Play, Trash2, RotateCcw,
+  Play, Trash2, RotateCcw, RefreshCw, Cpu,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -183,16 +183,27 @@ function generateRoundRobinBracket(
   return matches;
 }
 
-/* ------- Available models ------- */
-const AVAILABLE_MODELS = [
-  { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', provider: 'Anthropic', color: '#D97706' },
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', color: '#10B981' },
-  { id: 'gemini-pro', name: 'Gemini Pro', provider: 'Google', color: '#3B82F6' },
-  { id: 'mistral-large-latest', name: 'Mistral Large', provider: 'Mistral', color: '#F97316' },
-  { id: 'llama3-groq-70b-8192-tool-use-preview', name: 'Llama 3 70B', provider: 'Groq', color: '#8B5CF6' },
-  { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', color: '#EF4444' },
-  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'OpenAI', color: '#06B6D4' },
+/* ------- Available models (cloud) ------- */
+interface TournamentModel {
+  id: string;
+  name: string;
+  provider: string;
+  color: string;
+  isLocal: boolean;
+}
+
+const CLOUD_MODELS: TournamentModel[] = [
+  { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', provider: 'Anthropic', color: '#D97706', isLocal: false },
+  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', color: '#10B981', isLocal: false },
+  { id: 'gemini-pro', name: 'Gemini Pro', provider: 'Google', color: '#3B82F6', isLocal: false },
+  { id: 'mistral-large-latest', name: 'Mistral Large', provider: 'Mistral', color: '#F97316', isLocal: false },
+  { id: 'llama3-groq-70b-8192-tool-use-preview', name: 'Llama 3 70B', provider: 'Groq', color: '#8B5CF6', isLocal: false },
+  { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', color: '#EF4444', isLocal: false },
+  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'OpenAI', color: '#06B6D4', isLocal: false },
 ];
+
+/* Random color for local models */
+const LOCAL_COLORS = ['#059669', '#7C3AED', '#DC2626', '#0891B2', '#CA8A04', '#BE185D', '#4F46E5', '#15803D'];
 
 /* ------- Match Card ------- */
 
@@ -285,6 +296,7 @@ const MatchCard: React.FC<{
 
 const TournamentView: React.FC = () => {
   const setCurrentView = useStore((s) => s.setCurrentView);
+  const settings = useStore((s) => s.settings);
   const [tournaments, setTournaments] = useState<Tournament[]>(loadTournaments);
   const [activeTournamentId, setActiveTournamentId] = useState<string | null>(
     () => tournaments.find((t) => t.status !== 'completed')?.id ?? tournaments[0]?.id ?? null,
@@ -293,11 +305,73 @@ const TournamentView: React.FC = () => {
   const [topic, setTopic] = useState('');
   const [tournamentName, setTournamentName] = useState('');
   const [bracketType, setBracketType] = useState<'single-elimination' | 'round-robin'>('single-elimination');
+
+  // ── Local model discovery ──
+  const [localModels, setLocalModels] = useState<TournamentModel[]>([]);
+  const [loadingLocal, setLoadingLocal] = useState(false);
+
+  const fetchLocalModels = useCallback(async () => {
+    setLoadingLocal(true);
+    const discovered: TournamentModel[] = [];
+    let colorIdx = 0;
+
+    // Ollama
+    try {
+      const endpoint = (settings as any).localModelEndpoint ?? 'http://localhost:11434';
+      const resp = await fetch(`${endpoint}/api/tags`, { signal: AbortSignal.timeout(3000) });
+      if (resp.ok) {
+        const data = await resp.json();
+        for (const m of (data.models ?? [])) {
+          const name = m.name ?? m.model ?? 'unknown';
+          discovered.push({
+            id: `ollama-${name}`,
+            name: `${name}`,
+            provider: 'Ollama',
+            color: LOCAL_COLORS[colorIdx++ % LOCAL_COLORS.length],
+            isLocal: true,
+          });
+        }
+      }
+    } catch {
+      // Ollama not running
+    }
+
+    // LM Studio
+    try {
+      const endpoint = (settings as any).lmStudioEndpoint ?? 'http://localhost:1234/v1';
+      const resp = await fetch(`${endpoint}/models`, { signal: AbortSignal.timeout(3000) });
+      if (resp.ok) {
+        const data = await resp.json();
+        for (const m of (data.data ?? [])) {
+          const name = m.id ?? 'unknown';
+          discovered.push({
+            id: `lmstudio-${name}`,
+            name: `${name}`,
+            provider: 'LM Studio',
+            color: LOCAL_COLORS[colorIdx++ % LOCAL_COLORS.length],
+            isLocal: true,
+          });
+        }
+      }
+    } catch {
+      // LM Studio not running
+    }
+
+    setLocalModels(discovered);
+    setLoadingLocal(false);
+  }, [settings]);
+
+  // Scan on mount
+  useEffect(() => { fetchLocalModels(); }, [fetchLocalModels]);
+
+  // Merge cloud + local models
+  const AVAILABLE_MODELS = useMemo(() => [...CLOUD_MODELS, ...localModels], [localModels]);
+
   const [selectedModels, setSelectedModels] = useState<string[]>([
-    AVAILABLE_MODELS[0].id,
-    AVAILABLE_MODELS[1].id,
-    AVAILABLE_MODELS[2].id,
-    AVAILABLE_MODELS[3].id,
+    CLOUD_MODELS[0].id,
+    CLOUD_MODELS[1].id,
+    CLOUD_MODELS[2].id,
+    CLOUD_MODELS[3].id,
   ]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -357,7 +431,7 @@ const TournamentView: React.FC = () => {
     setShowCreateUI(false);
     setTopic('');
     setTournamentName('');
-  }, [topic, tournamentName, bracketType, selectedModels]);
+  }, [topic, tournamentName, bracketType, selectedModels, AVAILABLE_MODELS]);
 
   const handleSetWinner = useCallback((matchId: string, winner: TournamentParticipant) => {
     if (!activeTournament) return;
@@ -528,11 +602,24 @@ const TournamentView: React.FC = () => {
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Select Participants ({selectedModels.length} selected, min 2)
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {AVAILABLE_MODELS.map((model) => {
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Participants ({selectedModels.length} selected, min 2)
+              </p>
+              <div className="flex items-center gap-2">
+                {localModels.length > 0 && (
+                  <Badge variant="success">{localModels.length} local model{localModels.length !== 1 ? 's' : ''}</Badge>
+                )}
+                <Button variant="ghost" size="sm" onClick={fetchLocalModels} loading={loadingLocal} icon={<RefreshCw className="h-3.5 w-3.5" />}>
+                  Scan Local
+                </Button>
+              </div>
+            </div>
+
+            {/* Cloud Models */}
+            <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Cloud Models</p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {CLOUD_MODELS.map((model) => {
                 const selected = selectedModels.includes(model.id);
                 return (
                   <button
@@ -554,6 +641,48 @@ const TournamentView: React.FC = () => {
                 );
               })}
             </div>
+
+            {/* Local Models */}
+            {localModels.length > 0 && (
+              <>
+                <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                  <Cpu className="mr-1 inline-block h-3 w-3" />
+                  Local Models
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {localModels.map((model) => {
+                    const selected = selectedModels.includes(model.id);
+                    return (
+                      <button
+                        key={model.id}
+                        onClick={() => toggleModelSelection(model.id)}
+                        className={clsx(
+                          'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all',
+                          selected
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500/30 dark:border-emerald-500 dark:bg-emerald-900/20 dark:text-emerald-300'
+                            : 'border-gray-200 text-gray-700 hover:border-gray-300 dark:border-surface-dark-4 dark:text-gray-300 dark:hover:border-surface-dark-3',
+                        )}
+                      >
+                        <Avatar name={model.name} color={model.color} size="sm" />
+                        <div className="text-left">
+                          <p className="font-medium">{model.name}</p>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400">{model.provider}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {localModels.length === 0 && !loadingLocal && (
+              <div className="mt-2 flex items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 dark:border-surface-dark-4 dark:bg-surface-dark-2">
+                <Cpu className="h-4 w-4 text-gray-400" />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  No local models detected. Start Ollama or LM Studio, then click "Scan Local" to discover them.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3">
