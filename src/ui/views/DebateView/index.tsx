@@ -193,7 +193,7 @@ const CitationList: React.FC<CitationListProps> = ({ citations, onCitationClick,
           className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-forge-600 transition-colors hover:bg-forge-50 dark:border-surface-dark-4 dark:bg-surface-dark-2 dark:text-forge-400 dark:hover:bg-surface-dark-3"
         >
           <ExternalLink className="h-3 w-3" />
-          {cite.title || new URL(cite.url).hostname}
+          {cite.title || (cite.url ? (() => { try { return new URL(cite.url).hostname; } catch { return cite.url; } })() : 'Source')}
         </button>
       ))}
     </div>
@@ -616,6 +616,22 @@ const DebateView: React.FC = () => {
     URL.revokeObjectURL(url);
   }, [generateTranscriptMarkdown, currentDebate]);
 
+  const handleExportJSON = useCallback(() => {
+    if (!currentDebate) return;
+    const exportData = {
+      ...currentDebate,
+      exportedAt: new Date().toISOString(),
+      version: '1.0',
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `debate-${currentDebate.topic?.slice(0, 40).replace(/[^a-zA-Z0-9]/g, '-') ?? 'export'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [currentDebate]);
+
   const handleCopyTranscript = useCallback(async () => {
     const markdown = generateTranscriptMarkdown();
     try {
@@ -961,13 +977,15 @@ const DebateView: React.FC = () => {
     const debaterIndex = currentDebate.debaters.findIndex((d) => d.id === debater.id);
     const phase = getPhaseForStep(currentDebate, step) ?? currentDebate.currentPhase;
 
-    // Mark debate as actively generating
+    // Mark debate as actively generating (track start time on first turn)
+    const now = new Date().toISOString();
     setCurrentDebate({
       ...currentDebate,
       status: 'in-progress',
       currentDebaterIndex: debaterIndex,
       currentPhase: phase,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
+      ...(step === 0 && !currentDebate.startedAt ? { startedAt: now } : {}),
     });
 
     try {
@@ -1035,6 +1053,7 @@ const DebateView: React.FC = () => {
         : debateCopy.currentDebaterIndex;
 
       // Update the store with the new turn and advanced state
+      const completionTime = new Date().toISOString();
       setCurrentDebate({
         ...currentDebate,
         turns: [...currentDebate.turns, newTurn],
@@ -1042,7 +1061,8 @@ const DebateView: React.FC = () => {
         currentPhase: nextPhase ?? currentDebate.currentPhase,
         currentRound: nextStep + 1, // 1-based step number for display
         status: isNowComplete ? 'completed' : 'in-progress',
-        updatedAt: new Date().toISOString(),
+        updatedAt: completionTime,
+        ...(isNowComplete ? { completedAt: completionTime } : {}),
       });
 
       // ── ELO: Record debate result when verdict is delivered ──
@@ -1289,6 +1309,20 @@ const DebateView: React.FC = () => {
               )}
               {currentStep >= totalSteps && (
                 <Badge variant="success">Complete</Badge>
+              )}
+              {/* Debate duration */}
+              {currentDebate.startedAt && (
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  <Clock className="mr-0.5 inline-block h-3 w-3" />
+                  {(() => {
+                    const start = new Date(currentDebate.startedAt!).getTime();
+                    const end = currentDebate.completedAt ? new Date(currentDebate.completedAt).getTime() : Date.now();
+                    const durationSec = Math.floor((end - start) / 1000);
+                    const mins = Math.floor(durationSec / 60);
+                    const secs = durationSec % 60;
+                    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                  })()}
+                </span>
               )}
             </div>
           </div>
@@ -1834,6 +1868,11 @@ const DebateView: React.FC = () => {
                 <Tooltip content="Download transcript as Markdown">
                   <Button variant="ghost" size="sm" onClick={handleExportTranscript} icon={<Download className="h-4 w-4" />}>
                     Export
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Download debate as JSON">
+                  <Button variant="ghost" size="sm" onClick={handleExportJSON} icon={<Download className="h-4 w-4" />}>
+                    JSON
                   </Button>
                 </Tooltip>
                 {currentDebate && <ShareCardButtons debate={currentDebate} />}

@@ -1,5 +1,6 @@
 import type {
   Debate,
+  DebateFormatConfig,
   DebatePhase,
   DebaterConfig,
   DebateTurn,
@@ -43,30 +44,40 @@ export class DebateEngine {
    */
   startDebate(
     topic: string,
-    debaters: DebaterConfig[]
+    debaters: DebaterConfig[],
+    format?: DebateFormatConfig
   ): Debate {
-    if (debaters.length < 3) {
-      throw new Error(
-        'An Oxford Union debate requires exactly 3 participants: proposition, opposition, and housemaster.'
-      );
-    }
+    const formatConfig = format ?? OXFORD_UNION_FORMAT;
+    const sequence = formatConfig.turnSequence;
+    const needsHousemaster = sequence.some((s) => s.role === 'housemaster');
 
-    // Validate that we have all three roles assigned
+    // Validate that we have proposition and opposition
     const proposition = debaters.find((d) => d.position === 'proposition');
     const opposition = debaters.find((d) => d.position === 'opposition');
     const housemaster = debaters.find((d) => d.position === 'housemaster');
 
-    if (!proposition || !opposition || !housemaster) {
+    if (!proposition || !opposition) {
       throw new Error(
-        'Debaters must include exactly one proposition, one opposition, and one housemaster.'
+        'Debaters must include at least one proposition and one opposition.'
       );
     }
 
-    const formatConfig = OXFORD_UNION_FORMAT;
-    const now = new Date().toISOString();
+    if (needsHousemaster && !housemaster) {
+      throw new Error(
+        `The ${formatConfig.name} format requires a housemaster. Please assign one.`
+      );
+    }
 
-    // The first step is introduction by the housemaster
-    const firstStep = TURN_SEQUENCE[0];
+    const minDebaters = needsHousemaster ? 3 : 2;
+    if (debaters.length < minDebaters) {
+      throw new Error(
+        `The ${formatConfig.name} format requires at least ${minDebaters} participants.`
+      );
+    }
+
+    const now = new Date().toISOString();
+    const firstStep = sequence[0];
+    const firstDebater = debaters.find((d) => d.position === firstStep.role);
 
     return {
       id: uuidv4(),
@@ -76,9 +87,9 @@ export class DebateEngine {
       debaters,
       turns: [],
       currentRound: 1,
-      currentDebaterIndex: debaters.indexOf(housemaster),
+      currentDebaterIndex: firstDebater ? debaters.indexOf(firstDebater) : 0,
       currentPhase: firstStep.phase,
-      housemasterId: housemaster.id,
+      housemasterId: housemaster?.id,
       createdAt: now,
       updatedAt: now,
     };
@@ -139,7 +150,8 @@ export class DebateEngine {
     userQuestions?: string[]
   ): AsyncGenerator<StreamChunk> {
     if (this.isDebateComplete(debate)) {
-      throw new Error('Debate is already complete. All 10 turns have been played.');
+      const totalTurns = debate.format?.turnSequence?.length ?? TURN_SEQUENCE.length;
+      throw new Error(`Debate is already complete. All ${totalTurns} turns have been played.`);
     }
 
     const turnInfo = this.getCurrentTurnInfo(debate);
@@ -268,7 +280,8 @@ export class DebateEngine {
     debate?: Debate,
     userQuestions?: string[]
   ): string {
-    const stepLabel = `Step ${stepIndex + 1} of ${TURN_SEQUENCE.length}`;
+    const totalSteps = debate?.format?.turnSequence?.length ?? TURN_SEQUENCE.length;
+    const stepLabel = `Step ${stepIndex + 1} of ${totalSteps}`;
 
     // Resolve actual debater names for the Housemaster to reference
     const propName = debate?.debaters.find(d => d.position === 'proposition')?.name ?? 'the Proposition';
@@ -381,6 +394,12 @@ export class DebateEngine {
   ): string {
     const debater = debate.debaters.find((d) => d.position === role);
     if (!debater) {
+      // For formats without a housemaster (e.g., Lincoln-Douglas), cross-examination
+      // is handled by one of the debaters. Fall back to proposition for housemaster role.
+      if (role === 'housemaster') {
+        const fallback = debate.debaters.find((d) => d.position === 'proposition');
+        if (fallback) return fallback.id;
+      }
       throw new Error(`No debater found with position "${role}" in the debate.`);
     }
     return debater.id;
@@ -535,7 +554,7 @@ export class DebateEngine {
     );
 
     // ── Language ──
-    const language = (debate as any).language;
+    const language = debate.language;
     if (language && language !== 'en') {
       const LANG_NAMES: Record<string, string> = {
         es: 'Spanish', fr: 'French', de: 'German', pt: 'Portuguese', it: 'Italian',

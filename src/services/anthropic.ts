@@ -58,8 +58,9 @@ export class AnthropicService {
   ): AsyncGenerator<StreamChunk> {
     const { system, messages: converted } = this.convertMessages(messages);
 
-    // Check if model supports extended thinking (Claude 3.5+ sonnet/opus, Claude 4+)
-    const supportsThinking = /claude-(3-5|4|sonnet-4|opus-4)/.test(model);
+    // Check if model supports extended thinking (Claude 3.5 Sonnet+, Claude 4+)
+    // Matches: claude-3-5-sonnet-*, claude-sonnet-4-*, claude-opus-4-*, claude-haiku-4-5-*, etc.
+    const supportsThinking = /claude-(3-5-sonnet|sonnet-4|opus-4|haiku-4)/.test(model);
 
     try {
       const params: any = {

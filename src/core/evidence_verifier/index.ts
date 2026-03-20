@@ -190,10 +190,10 @@ export class EvidenceVerifier {
       return false;
     }
 
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
+    try {
       let response: Response;
       try {
         response = await fetch(url, {
@@ -210,10 +210,11 @@ export class EvidenceVerifier {
         });
       }
 
-      clearTimeout(timeout);
       return response.status >= 200 && response.status < 400;
     } catch {
       return false;
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

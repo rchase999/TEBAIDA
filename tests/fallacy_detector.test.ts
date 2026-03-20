@@ -61,13 +61,27 @@ describe('FallacyDetector', () => {
       expect(strawMan?.passage).toBeTruthy();
       expect(strawMan?.passage.length).toBeGreaterThan(10);
     });
+
+    it('detects hasty generalization', () => {
+      const text = "I met one rude person from that country, so all people from there must be rude. One example proves that all of them are like that.";
+      const fallacies = detector.detectFallacies(text);
+      expect(fallacies.some(f => f.type === 'hasty_generalization')).toBe(true);
+    });
+
+    it('detects false cause (post hoc)', () => {
+      const text = "Ever since they introduced that policy, crime rates have been rising. This clearly caused the increase in crime.";
+      const fallacies = detector.detectFallacies(text);
+      expect(fallacies.some(f => f.type === 'false_cause')).toBe(true);
+    });
   });
 
   describe('getSupportedFallacies', () => {
-    it('returns all fallacy types', () => {
+    it('returns all fallacy types including new ones', () => {
       const supported = detector.getSupportedFallacies();
-      expect(supported.length).toBeGreaterThanOrEqual(9);
+      expect(supported.length).toBeGreaterThanOrEqual(11);
       expect(supported.every(f => f.type && f.name && f.description)).toBe(true);
+      expect(supported.some(f => f.type === 'hasty_generalization')).toBe(true);
+      expect(supported.some(f => f.type === 'false_cause')).toBe(true);
     });
   });
 });

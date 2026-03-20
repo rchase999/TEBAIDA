@@ -65,6 +65,10 @@ const MORE_TOPICS = [
   'Is remote work better for society than office work?',
   'Should social media companies be liable for user content?',
   'Is space colonization a moral imperative?',
+  'Should AI-generated content be watermarked by law?',
+  'Is degrowth a viable strategy for combating climate change?',
+  'Should governments regulate large language models?',
+  'Is meritocracy a myth in modern society?',
 ];
 
 const FORMAT_OPTIONS: { value: DebateFormat; label: string; desc: string; turns: number; needsHousemaster: boolean }[] = [
@@ -74,13 +78,25 @@ const FORMAT_OPTIONS: { value: DebateFormat; label: string; desc: string; turns:
 ];
 
 const CLOUD_MODELS: ModelConfig[] = [
+  // Anthropic
+  { id: 'claude-opus-4-20250514', provider: 'anthropic', name: 'claude-opus-4-20250514', displayName: 'Claude Opus 4', maxTokens: 8192, supportsStreaming: true },
   { id: 'claude-sonnet-4-20250514', provider: 'anthropic', name: 'claude-sonnet-4-20250514', displayName: 'Claude Sonnet 4', maxTokens: 8192, supportsStreaming: true },
+  { id: 'claude-haiku-4-5-20251001', provider: 'anthropic', name: 'claude-haiku-4-5-20251001', displayName: 'Claude Haiku 4.5', maxTokens: 8192, supportsStreaming: true },
   { id: 'claude-3-5-sonnet-20241022', provider: 'anthropic', name: 'claude-3-5-sonnet-20241022', displayName: 'Claude 3.5 Sonnet', maxTokens: 8192, supportsStreaming: true },
+  // OpenAI
   { id: 'gpt-4o', provider: 'openai', name: 'gpt-4o', displayName: 'GPT-4o', maxTokens: 4096, supportsStreaming: true },
-  { id: 'gpt-4-turbo', provider: 'openai', name: 'gpt-4-turbo', displayName: 'GPT-4 Turbo', maxTokens: 4096, supportsStreaming: true },
-  { id: 'gemini-pro', provider: 'google', name: 'gemini-pro', displayName: 'Gemini Pro', maxTokens: 8192, supportsStreaming: true },
+  { id: 'gpt-4o-mini', provider: 'openai', name: 'gpt-4o-mini', displayName: 'GPT-4o Mini', maxTokens: 4096, supportsStreaming: true },
+  { id: 'o3', provider: 'openai', name: 'o3', displayName: 'o3', maxTokens: 4096, supportsStreaming: true },
+  { id: 'o3-mini', provider: 'openai', name: 'o3-mini', displayName: 'o3 Mini', maxTokens: 4096, supportsStreaming: true },
+  // Google
+  { id: 'gemini-2.5-pro', provider: 'google', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', maxTokens: 8192, supportsStreaming: true },
+  { id: 'gemini-2.5-flash', provider: 'google', name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', maxTokens: 8192, supportsStreaming: true },
+  // Mistral
   { id: 'mistral-large-latest', provider: 'mistral', name: 'mistral-large-latest', displayName: 'Mistral Large', maxTokens: 4096, supportsStreaming: true },
-  { id: 'llama3-groq-70b-8192-tool-use-preview', provider: 'groq', name: 'llama3-groq-70b-8192-tool-use-preview', displayName: 'Llama 3 70B (Groq)', maxTokens: 8192, supportsStreaming: true },
+  { id: 'mistral-medium-latest', provider: 'mistral', name: 'mistral-medium-latest', displayName: 'Mistral Medium', maxTokens: 4096, supportsStreaming: true },
+  // Groq
+  { id: 'llama-3.3-70b-versatile', provider: 'groq', name: 'llama-3.3-70b-versatile', displayName: 'Llama 3.3 70B (Groq)', maxTokens: 8192, supportsStreaming: true },
+  { id: 'mixtral-8x7b-32768', provider: 'groq', name: 'mixtral-8x7b-32768', displayName: 'Mixtral 8x7B (Groq)', maxTokens: 8192, supportsStreaming: true },
 ];
 
 const POSITION_LABELS: Record<string, string> = {
@@ -433,10 +449,10 @@ const SetupWizard: React.FC = () => {
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Format</p>
           <div className="mt-1 flex items-center gap-2">
-            <span className="font-semibold text-gray-900 dark:text-gray-100">Oxford Union</span>
-            <Badge variant="info">{OXFORD_UNION_FORMAT.totalTurns} turns</Badge>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{DEBATE_FORMATS[selectedFormat]?.name ?? 'Oxford Union'}</span>
+            <Badge variant="info">{DEBATE_FORMATS[selectedFormat]?.totalTurns ?? 10} turns</Badge>
           </div>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{OXFORD_UNION_FORMAT.description}</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{DEBATE_FORMATS[selectedFormat]?.description ?? ''}</p>
         </div>
 
         <div className="h-px bg-gray-200 dark:bg-surface-dark-3" />

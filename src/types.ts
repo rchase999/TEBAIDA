@@ -150,6 +150,10 @@ export interface Debate {
   audienceVotes?: { for: number; against: number; undecided: number };
   createdAt: string;
   updatedAt: string;
+  /** ISO timestamp when the first turn generation started */
+  startedAt?: string;
+  /** ISO timestamp when the debate was completed */
+  completedAt?: string;
 }
 
 // Scoring

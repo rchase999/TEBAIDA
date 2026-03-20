@@ -4,6 +4,7 @@ import {
   Swords, Plus, ShieldCheck, Users, Cpu,
   AlertTriangle, Clock, BarChart3, Sparkles,
   Trophy, Crown, Shield, TrendingUp, Search, X,
+  Trash2,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { Button } from '../components/Button';
@@ -51,6 +52,7 @@ const HomeView: React.FC = () => {
   const debates = useStore((s) => s.debates);
   const setCurrentView = useStore((s) => s.setCurrentView);
   const setCurrentDebate = useStore((s) => s.setCurrentDebate);
+  const deleteDebate = useStore((s) => s.deleteDebate);
   const resetSetup = useStore((s) => s.resetSetup);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -180,6 +182,13 @@ const HomeView: React.FC = () => {
                       <Clock className="mr-1 inline-block h-3.5 w-3.5" />
                       {formatDate(debate.createdAt)}
                     </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteDebate(debate.id); }}
+                      className="rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                      title="Delete debate"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </Card>
               );

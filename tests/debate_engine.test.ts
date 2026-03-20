@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DebateEngine, OXFORD_UNION_FORMAT, TURN_SEQUENCE } from '../src/core/debate_engine/index';
+import { DebateEngine, OXFORD_UNION_FORMAT, LINCOLN_DOUGLAS_FORMAT, PARLIAMENTARY_FORMAT, TURN_SEQUENCE } from '../src/core/debate_engine/index';
 import type { DebaterConfig, StreamChunk } from '../src/types';
 
 function makeDebaters(): DebaterConfig[] {
@@ -197,5 +197,78 @@ describe('Oxford Union Format', () => {
     expect(OXFORD_UNION_FORMAT.totalTurns).toBe(10);
     expect(OXFORD_UNION_FORMAT.rules.length).toBeGreaterThan(0);
     expect(OXFORD_UNION_FORMAT.description.length).toBeGreaterThan(20);
+  });
+});
+
+describe('Multi-format startDebate', () => {
+  const engine = new DebateEngine();
+
+  const makeDebater = (position: string, id: string) => ({
+    id,
+    name: position,
+    model: { id: 'test', provider: 'openai' as const, name: 'gpt-4o', displayName: 'GPT-4o', maxTokens: 4096, supportsStreaming: true },
+    persona: {
+      id: `p-${id}`, name: position, tagline: 'Test', background: 'Test', expertise: ['logic'],
+      rhetorical_style: 'analytical', ideological_leanings: 'neutral',
+      argumentation_preferences: { evidence_weight: 'moderate' as const, emotional_appeals: 'moderate' as const, concession_willingness: 'moderate' as const, humor: 'none' },
+      debate_behavior: { opening_strategy: 'Present thesis', rebuttal_strategy: 'Counter', closing_strategy: 'Summarize' },
+    },
+    position: position as any,
+    isLocal: false,
+  });
+
+  it('starts a Lincoln-Douglas debate with 2 debaters (no housemaster)', () => {
+    const debaters = [
+      makeDebater('proposition', 'd-prop'),
+      makeDebater('opposition', 'd-opp'),
+    ];
+    const debate = engine.startDebate('AI regulation', debaters, LINCOLN_DOUGLAS_FORMAT);
+    expect(debate.format.id).toBe('lincoln-douglas');
+    expect(debate.debaters).toHaveLength(2);
+    expect(debate.format.totalTurns).toBe(8);
+    expect(debate.currentPhase).toBe('opening');
+    expect(debate.housemasterId).toBeUndefined();
+  });
+
+  it('starts a Parliamentary debate with 3 debaters', () => {
+    const debaters = [
+      makeDebater('proposition', 'd-prop'),
+      makeDebater('opposition', 'd-opp'),
+      makeDebater('housemaster', 'd-hm'),
+    ];
+    const debate = engine.startDebate('Climate policy', debaters, PARLIAMENTARY_FORMAT);
+    expect(debate.format.id).toBe('parliamentary');
+    expect(debate.debaters).toHaveLength(3);
+    expect(debate.format.totalTurns).toBe(8);
+    expect(debate.currentPhase).toBe('introduction');
+    expect(debate.housemasterId).toBe('d-hm');
+  });
+
+  it('throws if housemaster missing for Parliamentary format', () => {
+    const debaters = [
+      makeDebater('proposition', 'd-prop'),
+      makeDebater('opposition', 'd-opp'),
+    ];
+    expect(() => engine.startDebate('Topic', debaters, PARLIAMENTARY_FORMAT)).toThrow('housemaster');
+  });
+
+  it('does not throw if housemaster missing for Lincoln-Douglas format', () => {
+    const debaters = [
+      makeDebater('proposition', 'd-prop'),
+      makeDebater('opposition', 'd-opp'),
+    ];
+    expect(() => engine.startDebate('Topic', debaters, LINCOLN_DOUGLAS_FORMAT)).not.toThrow();
+  });
+
+  it('completes after correct number of turns for Lincoln-Douglas', () => {
+    const debaters = [
+      makeDebater('proposition', 'd-prop'),
+      makeDebater('opposition', 'd-opp'),
+    ];
+    const debate = engine.startDebate('Topic', debaters, LINCOLN_DOUGLAS_FORMAT);
+    for (let i = 0; i < 8; i++) {
+      debate.turns.push({ id: `t${i}`, debateId: debate.id, debaterName: 'X', debaterId: 'd-prop', model: 'm', persona: 'p', content: 'x', citations: [], round: 1, phase: 'opening', timestamp: '' });
+    }
+    expect(engine.isDebateComplete(debate)).toBe(true);
   });
 });

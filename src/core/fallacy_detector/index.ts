@@ -225,6 +225,47 @@ const FALLACY_PATTERNS: FallacyPattern[] = [
   },
 
   {
+    type: 'false_cause',
+    name: 'False Cause (Post Hoc)',
+    description:
+      'Assuming that because one event followed another, the first event caused the second.',
+    severity: 'medium',
+    regexPatterns: [
+      /(?:ever )?since .{5,60},? .{5,60} (?:has|have|had) (?:been |become |gotten |started )/i,
+      /(?:after|once|when) .{5,60} (?:happened|occurred|began|started),? .{5,60} (?:followed|resulted|happened|occurred|started)/i,
+      /(?:this|that|it) (?:clearly |obviously )?(?:caused|led to|resulted in|brought about|triggered|produced)/i,
+      /(?:because|since) .{5,60} (?:came|happened|occurred) (?:first|before|earlier|prior)/i,
+      /(?:correlation|coincidence) .{0,20}(?:proves?|means?|shows?|demonstrates?) .{0,30}(?:causation|caused)/i,
+    ],
+    keywordGroups: [
+      ['caused', 'because', 'after', 'therefore'],
+      ['correlation', 'causation', 'proves'],
+      ['since', 'happened', 'resulted', 'caused'],
+    ],
+    keywordThreshold: 1,
+  },
+
+  {
+    type: 'hasty_generalization',
+    name: 'Hasty Generalization',
+    description:
+      'Drawing a broad conclusion from a small or unrepresentative sample of evidence.',
+    severity: 'medium',
+    regexPatterns: [
+      /(?:all|every|always|never|no one|everyone|nobody) .{5,60}(?:because|since|after) .{3,40}(?:one|a single|a few|an? (?:example|case|instance|study|anecdote))/i,
+      /(?:one|a single|a few|this one|that one) .{3,60}(?:proves?|shows?|demonstrates?|means?) (?:that )?(?:all|every|always|never|no one)/i,
+      /(?:I|we|you) (?:once |just )?(?:saw|met|knew|heard about|read about) .{3,40}(?:so|therefore|which (?:means|proves|shows))/i,
+      /(?:based on|from) (?:this|that|one|a (?:single|few)) (?:example|case|instance|anecdote).{0,20}(?:we can (?:conclude|say|assume)|it(?:'s| is) (?:clear|obvious|evident))/i,
+    ],
+    keywordGroups: [
+      ['all', 'every', 'one example', 'proves'],
+      ['generalize', 'always', 'never', 'sample'],
+      ['anecdote', 'therefore', 'all', 'every'],
+    ],
+    keywordThreshold: 1,
+  },
+
+  {
     type: 'circular_reasoning',
     name: 'Circular Reasoning',
     description:

@@ -63,15 +63,24 @@ const DEFAULT_SETTINGS: AppSettings = {
 // Default debater configs used in the setup wizard
 // ---------------------------------------------------------------------------
 function makeDefaultDebater(position: 'proposition' | 'opposition', index: number): DebaterConfig {
+  // Default proposition to Claude, opposition to GPT for model diversity
+  const isProposition = position === 'proposition';
   return {
     id: `debater-${index}`,
-    name: position === 'proposition' ? 'Proposition' : 'Opposition',
-    model: {
+    name: isProposition ? 'Proposition' : 'Opposition',
+    model: isProposition ? {
       id: 'claude-sonnet-4-20250514',
       provider: 'anthropic',
       name: 'claude-sonnet-4-20250514',
       displayName: 'Claude Sonnet 4',
       maxTokens: 8192,
+      supportsStreaming: true,
+    } : {
+      id: 'gpt-4o',
+      provider: 'openai',
+      name: 'gpt-4o',
+      displayName: 'GPT-4o',
+      maxTokens: 4096,
       supportsStreaming: true,
     },
     persona: {
@@ -203,6 +212,7 @@ export interface DebateForgeState {
   setCurrentDebate: (debate: Debate | null) => void;
   addTurn: (turn: DebateTurn) => void;
   updateTurn: (turnId: string, updates: Partial<DebateTurn>) => void;
+  deleteDebate: (id: string) => void;
   setStreamingContent: (content: string) => void;
   setStreamingThinking: (content: string) => void;
   clearStreamingContent: () => void;
@@ -332,6 +342,30 @@ const BUILT_IN_PERSONAS: Persona[] = [
     argumentation_preferences: { evidence_weight: 'moderate', emotional_appeals: 'minimal', concession_willingness: 'moderate', humor: 'Nerdy references and thought experiments.' },
     debate_behavior: { opening_strategy: 'Project current trends forward and show how the landscape is shifting. Frame the debate in terms of where we\'re heading, not where we\'ve been.', rebuttal_strategy: 'Show how opponent\'s arguments are based on outdated assumptions. Present emerging data and technology that changes the calculus.', closing_strategy: 'Paint a concrete picture of the near-future scenario your position enables versus the alternative.' },
     avatar_color: '#06B6D4',
+  },
+  {
+    id: 'legal-scholar',
+    name: 'The Legal Scholar',
+    tagline: 'The law is reason, free from passion.',
+    background: 'A constitutional law professor and former appellate judge with expertise in comparative legal systems. Analyzes every issue through legal frameworks, precedent, and rights-based reasoning.',
+    expertise: ['constitutional law', 'international law', 'human rights', 'legal philosophy'],
+    rhetorical_style: 'Precise and authoritative. Builds arguments through case analysis, statutory interpretation, and constitutional principles.',
+    ideological_leanings: 'Rule-of-law centrist — believes in institutional frameworks and due process.',
+    argumentation_preferences: { evidence_weight: 'heavy', emotional_appeals: 'minimal', concession_willingness: 'moderate', humor: 'Dry legal wit and Latin maxims.' },
+    debate_behavior: { opening_strategy: 'Establish the legal framework for analyzing the issue. Cite relevant precedent and constitutional principles.', rebuttal_strategy: 'Distinguish opponent\'s cited cases on the facts. Show where their legal reasoning breaks down or leads to unintended consequences.', closing_strategy: 'Synthesize the legal arguments into a clear holding. Show how the weight of precedent and principle supports your position.' },
+    avatar_color: '#7C3AED',
+  },
+  {
+    id: 'economic-realist',
+    name: 'The Economic Realist',
+    tagline: 'Follow the incentives, find the truth.',
+    background: 'A behavioral economist who has advised central banks and international development organizations. Approaches every debate through the lens of incentives, trade-offs, and empirical economic data.',
+    expertise: ['behavioral economics', 'public policy', 'game theory', 'development economics'],
+    rhetorical_style: 'Data-heavy and pragmatic. Uses cost-benefit analyses, natural experiments, and cross-country comparisons.',
+    ideological_leanings: 'Evidence-based pragmatist — skeptical of both market fundamentalism and central planning.',
+    argumentation_preferences: { evidence_weight: 'heavy', emotional_appeals: 'minimal', concession_willingness: 'high', humor: 'Wry observations about perverse incentives.' },
+    debate_behavior: { opening_strategy: 'Frame the debate in terms of costs, benefits, and trade-offs. Present the strongest empirical evidence for your position.', rebuttal_strategy: 'Challenge the economic assumptions behind opponent\'s arguments. Show unintended consequences and perverse incentives.', closing_strategy: 'Synthesize the empirical evidence and show which position has the better cost-benefit ratio.' },
+    avatar_color: '#059669',
   },
 ];
 
@@ -542,6 +576,18 @@ export const useStore = create<DebateForgeState>((set, get) => {
         );
         if (state.settings.autoSaveDebates) persistDebates(updatedDebates);
         return { currentDebate: updatedDebate, debates: updatedDebates };
+      });
+    },
+
+    deleteDebate: (id) => {
+      set((state) => {
+        const updatedDebates = state.debates.filter((d) => d.id !== id);
+        persistDebates(updatedDebates);
+        return {
+          debates: updatedDebates,
+          currentDebate: state.currentDebate?.id === id ? null : state.currentDebate,
+          isDebating: state.currentDebate?.id === id ? false : state.isDebating,
+        };
       });
     },
 
