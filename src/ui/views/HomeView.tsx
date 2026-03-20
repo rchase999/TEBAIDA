@@ -15,6 +15,7 @@ import { Card } from '../components/Card';
 import { DebateStreakTracker } from '../components/DebateStreakTracker';
 import { ArgumentHeatmap } from '../components/ArgumentHeatmap';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
+import { DebateAutoSuggestions } from '../components/DebateAutoSuggestions';
 import { Badge } from '../components/Badge';
 import type { Debate, DebateFormat, DebateStatus } from '../../types';
 
@@ -552,6 +553,16 @@ const HomeView: React.FC = () => {
               </button>
             </div>
           </Card>
+
+          {/* AI-powered suggestions based on debate history */}
+          {debates.length >= 2 && (
+            <Card className="!p-4">
+              <DebateAutoSuggestions
+                debates={debates}
+                onSelect={(topic) => handleTopicSuggestion(topic)}
+              />
+            </Card>
+          )}
 
           {/* Feature Highlights (only if no debates) */}
           {debates.length < 3 && (
