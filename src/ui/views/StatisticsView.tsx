@@ -26,6 +26,7 @@ import { Button } from '../components/Button';
 import { ArgumentHeatmap } from '../components/ArgumentHeatmap';
 import { DebateWordCloud } from '../components/DebateWordCloud';
 import { DebateInsights } from '../components/DebateInsights';
+import { ModelComparisonChart } from '../components/ModelComparisonChart';
 import type { Debate, DebateStatus } from '../../types';
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
@@ -684,7 +685,20 @@ const StatisticsView: React.FC = () => {
         </Card>
       </section>
 
-      {/* ── 8. Activity Heatmap ── */}
+      {/* ── 8. Model Comparison ── */}
+      <section className="mb-10">
+        <Card>
+          <div className="mb-5 flex items-center gap-2">
+            <Cpu className="h-5 w-5 text-forge-600 dark:text-forge-400" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Model Performance Comparison
+            </h2>
+          </div>
+          <ModelComparisonChart debates={debates} />
+        </Card>
+      </section>
+
+      {/* ── 9. Activity Heatmap ── */}
       <section className="mb-10">
         <Card>
           <div className="mb-5 flex items-center gap-2">

@@ -5,6 +5,8 @@ import {
   Command, ChevronRight, Monitor, Keyboard,
   HelpCircle, ExternalLink, Bug,
 } from 'lucide-react';
+import { NotificationCenter } from './NotificationCenter';
+import { useStore } from '../store';
 
 export interface HeaderProps {
   currentDebateTopic?: string;
@@ -39,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
   className,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const debates = useStore((s) => s.debates);
   const isDark = theme === 'dark';
 
   const viewLabel = VIEW_LABELS[currentView] ?? 'DebateForge';
@@ -100,6 +103,9 @@ export const Header: React.FC<HeaderProps> = ({
             <Search className="h-5 w-5" />
           </button>
         )}
+
+        {/* Notifications */}
+        <NotificationCenter debates={debates} />
 
         {/* Keyboard shortcuts */}
         {onShortcutsClick && (
