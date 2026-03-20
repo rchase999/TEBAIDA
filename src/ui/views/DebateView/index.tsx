@@ -39,6 +39,9 @@ import { DebateTimeline } from '../../components/DebateTimeline';
 import { DebateSummaryGenerator } from '../../components/DebateSummaryGenerator';
 import { DebateShareCard } from '../../components/DebateShareCard';
 import { ConfettiEffect } from '../../components/ConfettiEffect';
+import { ExportOptions } from '../../components/ExportOptions';
+import { DebateRatingCard } from '../../components/DebateRatingCard';
+import { DebateClipboard } from '../../components/DebateClipboard';
 import type { DebateScore } from '../../../types';
 import type { DebateTurn, DebaterConfig, DetectedFallacy, Citation, Debate, DebatePhase, UserComment, OpinionValue, MomentumPoint } from '../../../types';
 
@@ -1953,12 +1956,17 @@ const DebateView: React.FC = () => {
           </div>
         )}
 
-        {/* Word Stats + Notes + Share Card (after completed bar) */}
+        {/* Word Stats + Notes + Share Card + Rating + Clipboard (after completed bar) */}
         {isCompleted && currentDebate && (
           <div className="space-y-3 border-t border-gray-200 px-5 py-4 dark:border-surface-dark-3">
             <DebateWordStats turns={turns} debaters={currentDebate.debaters} />
+            <DebateClipboard debate={currentDebate} />
             <DebateNotes debateId={currentDebate.id} />
-            <DebateShareCard debate={currentDebate} />
+            <div className="flex items-center gap-2">
+              <ExportOptions debate={currentDebate} />
+              <DebateShareCard debate={currentDebate} />
+            </div>
+            <DebateRatingCard debateId={currentDebate.id} />
           </div>
         )}
       </div>

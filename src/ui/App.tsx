@@ -17,6 +17,9 @@ import type { AppView as SidebarAppView } from './components/Sidebar';
 // Lazy-load heavy components
 const CommandPalette = lazy(() => import('./components/CommandPalette'));
 const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcutsModal'));
+const WhatsNewModal = lazy(() => import('./components/WhatsNewModal'));
+const FeedbackWidget = lazy(() => import('./components/FeedbackWidget'));
+const BackToTop = lazy(() => import('./components/BackToTop'));
 
 function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
   if (sidebarView === 'new-debate') return 'setup';
@@ -49,6 +52,12 @@ export default function App() {
   // Command palette & shortcuts state
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(() => {
+    try {
+      const seen = localStorage.getItem('debateforge-whatsnew-seen');
+      return seen !== '1.0.0';
+    } catch { return false; }
+  });
 
   useEffect(() => {
     loadApiKeys();
@@ -272,6 +281,29 @@ export default function App() {
             onClose={() => setShortcutsModalOpen(false)}
           />
         )}
+      </Suspense>
+
+      {/* What's New Modal */}
+      <Suspense fallback={null}>
+        {whatsNewOpen && (
+          <WhatsNewModal
+            isOpen={whatsNewOpen}
+            onClose={() => {
+              setWhatsNewOpen(false);
+              try { localStorage.setItem('debateforge-whatsnew-seen', '1.0.0'); } catch {}
+            }}
+          />
+        )}
+      </Suspense>
+
+      {/* Feedback Widget */}
+      <Suspense fallback={null}>
+        <FeedbackWidget />
+      </Suspense>
+
+      {/* Back to Top */}
+      <Suspense fallback={null}>
+        <BackToTop containerRef={mainRef as React.RefObject<HTMLElement>} />
       </Suspense>
 
       {/* Toast Notifications */}
