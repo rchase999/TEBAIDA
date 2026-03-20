@@ -25,6 +25,7 @@ import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
 import { ArgumentHeatmap } from '../components/ArgumentHeatmap';
 import { DebateWordCloud } from '../components/DebateWordCloud';
+import { DebateInsights } from '../components/DebateInsights';
 import type { Debate, DebateStatus } from '../../types';
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
@@ -366,6 +367,19 @@ const StatisticsView: React.FC = () => {
           value={`${stats.completionRate}%`}
           color="text-emerald-500"
         />
+      </section>
+
+      {/* ── Fun Insights ── */}
+      <section className="mb-10">
+        <Card>
+          <div className="mb-5 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-forge-600 dark:text-forge-400" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Insights
+            </h2>
+          </div>
+          <DebateInsights debates={debates} />
+        </Card>
       </section>
 
       {/* ── Status breakdown row ── */}

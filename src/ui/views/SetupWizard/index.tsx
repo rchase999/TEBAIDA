@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChevronRight, ChevronLeft, Play, Lightbulb,
-  Check, RefreshCw,
+  RefreshCw, Zap, Info,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -11,7 +11,9 @@ import { Input } from '../../components/Input';
 import { Select } from '../../components/Select';
 import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
-import { ProgressBar } from '../../components/ProgressBar';
+import { DebateQuickTemplates } from '../../components/DebateQuickTemplates';
+import type { QuickTemplate } from '../../components/DebateQuickTemplates';
+import { Stepper } from '../../components/Stepper';
 import { DEBATE_FORMATS, OXFORD_UNION_FORMAT } from '../../../core/debate_engine/formats';
 import type { DebaterConfig, ModelConfig, Persona, OpinionValue, DebateFormat, DebateFormatConfig } from '../../../types';
 
@@ -71,10 +73,31 @@ const MORE_TOPICS = [
   'Is meritocracy a myth in modern society?',
 ];
 
-const FORMAT_OPTIONS: { value: DebateFormat; label: string; desc: string; turns: number; needsHousemaster: boolean }[] = [
-  { value: 'oxford-union', label: 'Oxford Union', desc: 'Classic 10-step structured debate with Housemaster', turns: 10, needsHousemaster: true },
-  { value: 'lincoln-douglas', label: 'Lincoln-Douglas', desc: '1v1 values-focused debate, direct confrontation', turns: 8, needsHousemaster: false },
-  { value: 'parliamentary', label: 'Parliamentary', desc: 'Speaker-managed debate with Government vs Opposition', turns: 8, needsHousemaster: true },
+const FORMAT_OPTIONS: { value: DebateFormat; label: string; desc: string; tooltip: string; turns: number; needsHousemaster: boolean }[] = [
+  {
+    value: 'oxford-union',
+    label: 'Oxford Union',
+    desc: 'Classic 10-step structured debate with Housemaster',
+    tooltip: 'The gold standard of formal debate. A Housemaster moderates as Proposition and Opposition clash through structured phases: openings, rebuttals, cross-examination, and a final verdict.',
+    turns: 10,
+    needsHousemaster: true,
+  },
+  {
+    value: 'lincoln-douglas',
+    label: 'Lincoln-Douglas',
+    desc: '1v1 values-focused debate, direct confrontation',
+    tooltip: 'A pure 1v1 intellectual duel focused on values and logic. No moderator - just two minds debating head-to-head through structured arguments and counter-arguments.',
+    turns: 8,
+    needsHousemaster: false,
+  },
+  {
+    value: 'parliamentary',
+    label: 'Parliamentary',
+    desc: 'Speaker-managed debate with Government vs Opposition',
+    tooltip: 'Government vs Opposition in a speaker-managed format. Emphasizes quick thinking, points of order, and rhetorical flourish in a parliamentary tradition.',
+    turns: 8,
+    needsHousemaster: true,
+  },
 ];
 
 const CLOUD_MODELS: ModelConfig[] = [
@@ -265,9 +288,13 @@ const SetupWizard: React.FC = () => {
                   ? 'border-forge-500 bg-forge-50 dark:border-forge-500 dark:bg-forge-900/20'
                   : 'border-gray-200 hover:border-gray-300 dark:border-surface-dark-4 dark:hover:border-surface-dark-3',
               )}
+              title={fmt.tooltip}
             >
               <p className="font-semibold text-gray-900 dark:text-gray-100">{fmt.label}</p>
               <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{fmt.desc}</p>
+              {selectedFormat === fmt.value && (
+                <p className="mt-1.5 text-xs leading-relaxed text-gray-600 dark:text-gray-300">{fmt.tooltip}</p>
+              )}
               <Badge variant="info" size="sm">{fmt.turns} turns</Badge>
             </button>
           ))}
@@ -342,6 +369,20 @@ const SetupWizard: React.FC = () => {
             Show more topics...
           </button>
         )}
+      </div>
+
+      {/* Quick Templates */}
+      <div>
+        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+          <Zap className="h-4 w-4" />
+          <span>Quick Templates</span>
+        </div>
+        <DebateQuickTemplates
+          onSelect={(template: QuickTemplate) => {
+            setSetupTopic(template.topic);
+            setStep(1);
+          }}
+        />
       </div>
     </div>
   );
@@ -424,6 +465,44 @@ const SetupWizard: React.FC = () => {
                 placeholder={personas.length === 0 ? 'No personas available' : undefined}
               />
             </div>
+
+            {/* Persona Preview Card */}
+            {debater.persona && (
+              <div className="mt-3 flex items-start gap-3 rounded-lg border border-gray-100 bg-gray-50/50 p-3 dark:border-surface-dark-3 dark:bg-surface-dark-2/50">
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                  style={{ backgroundColor: debater.persona.avatar_color ?? '#6b7280' }}
+                >
+                  {debater.persona.name[0]?.toUpperCase() ?? '?'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    {debater.persona.name}
+                  </p>
+                  <p className="mt-0.5 text-xs italic text-gray-500 dark:text-gray-400">
+                    {debater.persona.tagline}
+                  </p>
+                  {debater.persona.expertise && debater.persona.expertise.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {debater.persona.expertise.slice(0, 4).map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-block rounded-full bg-forge-100 px-2 py-0.5 text-[10px] font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-300"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {debater.persona.rhetorical_style && (
+                    <p className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+                      <Info className="h-3 w-3 shrink-0" />
+                      <span>Style: {debater.persona.rhetorical_style}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </Card>
         ))}
       </div>
@@ -564,40 +643,13 @@ const SetupWizard: React.FC = () => {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Progress */}
+      {/* Progress Stepper */}
       <div className="border-b border-gray-200 bg-white px-6 py-4 dark:border-surface-dark-3 dark:bg-surface-dark-0">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-3 flex items-center justify-between text-sm">
-            {STEP_LABELS.map((label, i) => (
-              <button
-                key={label}
-                onClick={() => { if (i < step) setStep(i); }}
-                className={clsx(
-                  'flex items-center gap-2 font-medium transition-colors',
-                  i === step
-                    ? 'text-forge-600 dark:text-forge-400'
-                    : i < step
-                      ? 'text-gray-700 dark:text-gray-300 cursor-pointer hover:text-forge-500'
-                      : 'text-gray-400 dark:text-gray-500',
-                )}
-              >
-                <span
-                  className={clsx(
-                    'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold',
-                    i === step
-                      ? 'bg-forge-600 text-white'
-                      : i < step
-                        ? 'bg-forge-100 text-forge-700 dark:bg-forge-900/40 dark:text-forge-300'
-                        : 'bg-gray-200 text-gray-500 dark:bg-surface-dark-3 dark:text-gray-500',
-                  )}
-                >
-                  {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
-                </span>
-                <span className="hidden sm:inline">{label}</span>
-              </button>
-            ))}
-          </div>
-          <ProgressBar value={((step + 1) / STEP_LABELS.length) * 100} />
+          <Stepper
+            steps={STEP_LABELS.map((label) => ({ label }))}
+            currentStep={step}
+          />
         </div>
       </div>
 

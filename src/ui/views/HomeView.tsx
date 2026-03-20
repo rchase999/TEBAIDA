@@ -14,6 +14,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { DebateStreakTracker } from '../components/DebateStreakTracker';
 import { ArgumentHeatmap } from '../components/ArgumentHeatmap';
+import { OnboardingChecklist } from '../components/OnboardingChecklist';
 import { Badge } from '../components/Badge';
 import type { Debate, DebateFormat, DebateStatus } from '../../types';
 
@@ -210,9 +211,14 @@ const HomeView: React.FC = () => {
   const deleteDebate = useStore((s) => s.deleteDebate);
   const resetSetup = useStore((s) => s.resetSetup);
   const setSetupTopic = useStore((s) => s.setSetupTopic);
+  const apiKeys = useStore((s) => s.apiKeys);
+  const personas = useStore((s) => s.personas);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<DebateStatus | 'all'>('all');
   const [randomTopics, setRandomTopics] = useState<string[]>([]);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
+    try { return localStorage.getItem('debateforge-onboarding-dismissed') === 'true'; } catch { return false; }
+  });
 
   // Pick 3 random suggested topics on mount
   useEffect(() => {
@@ -291,6 +297,24 @@ const HomeView: React.FC = () => {
           New Debate
         </Button>
       </section>
+
+      {/* Onboarding Checklist */}
+      {!onboardingDismissed && (
+        <section className="mb-8">
+          <OnboardingChecklist
+            hasApiKey={Object.values(apiKeys ?? {}).some((k) => typeof k === 'string' && k.length > 5)}
+            hasCompletedDebate={debates.some((d) => d.status === 'completed')}
+            hasCustomPersona={personas.length > 8}
+            hasTournament={false}
+            debateCount={debates.length}
+            onNavigate={(view) => setCurrentView(view as any)}
+            onDismiss={() => {
+              setOnboardingDismissed(true);
+              try { localStorage.setItem('debateforge-onboarding-dismissed', 'true'); } catch {}
+            }}
+          />
+        </section>
+      )}
 
       {/* Quick Stats */}
       {debates.length > 0 && (

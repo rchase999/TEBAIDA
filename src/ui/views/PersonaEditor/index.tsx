@@ -1,9 +1,10 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import clsx from 'clsx';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Search, Plus, Trash2, Copy, Save, Download, Upload,
   X, User, Palette, Tag, MessageSquare, Share2, FileText,
+  BarChart3, Quote, FileUp,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -47,6 +48,23 @@ const COLOR_PRESETS = [
   '#EC4899', '#06B6D4', '#F97316', '#6366F1', '#14B8A6',
   '#E11D48', '#7C3AED', '#059669', '#D97706', '#2563EB',
 ];
+
+/* ------- Sample debate quote generator ------- */
+
+function generateSampleQuote(persona: Persona): string {
+  const name = persona.name || 'This persona';
+  const expertise = persona.expertise.length > 0
+    ? persona.expertise.slice(0, 3).join(', ')
+    : 'general topics';
+  const opening = persona.debate_behavior.opening_strategy
+    ? persona.debate_behavior.opening_strategy.slice(0, 120) + (persona.debate_behavior.opening_strategy.length > 120 ? '...' : '')
+    : 'presenting a well-structured argument';
+  const style = persona.rhetorical_style
+    ? ` My style is ${persona.rhetorical_style.split('.')[0].toLowerCase()}.`
+    : '';
+
+  return `As ${name} with expertise in ${expertise}, I would open by: ${opening}${style}`;
+}
 
 /* ------- Expertise tag input ------- */
 const TagInput: React.FC<{
@@ -106,15 +124,36 @@ const TagInput: React.FC<{
 };
 
 /* ------- Preview ------- */
-const PersonaPreview: React.FC<{ persona: Persona }> = ({ persona }) => (
+const PersonaPreview: React.FC<{ persona: Persona; debateCount?: number; winRate?: number }> = ({ persona, debateCount, winRate }) => (
   <Card className="space-y-3">
     <div className="flex items-center gap-3">
       <Avatar name={persona.name || '?'} color={persona.avatar_color} size="lg" />
-      <div>
+      <div className="min-w-0 flex-1">
         <h4 className="font-semibold text-gray-900 dark:text-gray-100">{persona.name || 'Unnamed'}</h4>
         <p className="text-sm text-gray-500 dark:text-gray-400">{persona.tagline || 'No tagline'}</p>
       </div>
     </div>
+    {/* Persona statistics */}
+    {debateCount !== undefined && (
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 rounded-md bg-forge-50 px-2 py-1 dark:bg-forge-900/20">
+          <BarChart3 className="h-3.5 w-3.5 text-forge-600 dark:text-forge-400" />
+          <span className="text-xs font-medium text-forge-700 dark:text-forge-300">
+            Used in {debateCount} debate{debateCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+        {winRate !== undefined && debateCount > 0 && (
+          <div className={clsx(
+            'rounded-md px-2 py-1 text-xs font-medium',
+            winRate >= 50
+              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
+              : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
+          )}>
+            {winRate.toFixed(0)}% win rate
+          </div>
+        )}
+      </div>
+    )}
     {persona.expertise.length > 0 && (
       <div className="flex flex-wrap gap-1.5">
         {persona.expertise.map((e) => (
@@ -124,6 +163,16 @@ const PersonaPreview: React.FC<{ persona: Persona }> = ({ persona }) => (
     )}
     {persona.background && (
       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{persona.background}</p>
+    )}
+    {/* Sample debate quote preview */}
+    {(persona.name || persona.debate_behavior.opening_strategy) && (
+      <div className="relative rounded-lg border border-forge-200 bg-forge-50/50 p-3 dark:border-forge-800 dark:bg-forge-900/10">
+        <Quote className="absolute right-2 top-2 h-4 w-4 text-forge-300 dark:text-forge-700" />
+        <p className="text-xs font-medium text-forge-600 dark:text-forge-400 mb-1">Sample Opening</p>
+        <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">
+          &ldquo;{generateSampleQuote(persona)}&rdquo;
+        </p>
+      </div>
     )}
     <div className="grid grid-cols-3 gap-2 text-center text-xs">
       <div className="rounded-lg bg-gray-50 p-2 dark:bg-surface-dark-2">
@@ -146,9 +195,12 @@ const PersonaPreview: React.FC<{ persona: Persona }> = ({ persona }) => (
 
 const PersonaEditor: React.FC = () => {
   const personas = useStore((s) => s.personas);
+  const debates = useStore((s) => s.debates);
   const addPersona = useStore((s) => s.addPersona);
   const updatePersona = useStore((s) => s.updatePersona);
   const deletePersona = useStore((s) => s.deletePersona);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedId, setSelectedId] = useState<string | null>(personas[0]?.id ?? null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -170,6 +222,35 @@ const PersonaEditor: React.FC = () => {
         p.expertise.some((e) => e.toLowerCase().includes(q)),
     );
   }, [personas, searchQuery]);
+
+  // Compute per-persona debate usage count and win rate
+  const personaStats = useMemo(() => {
+    const stats: Record<string, { debateCount: number; wins: number; total: number }> = {};
+    for (const persona of personas) {
+      stats[persona.id] = { debateCount: 0, wins: 0, total: 0 };
+    }
+    for (const debate of debates) {
+      for (const debater of debate.debaters) {
+        const pid = debater.persona?.id;
+        if (pid && stats[pid] !== undefined) {
+          stats[pid].debateCount += 1;
+          // Compute win rate from scores if available
+          if (debate.scores && debate.scores.length > 0) {
+            stats[pid].total += 1;
+            const thisScore = debate.scores.find((s) => s.debaterId === debater.id);
+            if (thisScore) {
+              const otherScores = debate.scores.filter((s) => s.debaterId !== debater.id && debater.position !== 'housemaster');
+              const maxOther = otherScores.reduce((max, s) => Math.max(max, s.categories.overall), 0);
+              if (thisScore.categories.overall > maxOther) {
+                stats[pid].wins += 1;
+              }
+            }
+          }
+        }
+      }
+    }
+    return stats;
+  }, [personas, debates]);
 
   const selectedPersona = useMemo(
     () => personas.find((p) => p.id === selectedId) ?? null,
@@ -258,6 +339,44 @@ const PersonaEditor: React.FC = () => {
       alert('Failed to parse persona JSON. Please check the format.');
     }
   };
+
+  // Import persona from a JSON file via file picker
+  const handleImportFromFile = useCallback(() => {
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.value = '';
+    input.click();
+  }, []);
+
+  const handleFileSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const parsed = JSON.parse(evt.target?.result as string) as Persona;
+        if (!parsed.name) throw new Error('Invalid persona');
+        const imported: Persona = { ...parsed, id: uuidv4() };
+        addPersona(imported);
+        setSelectedId(imported.id);
+        setEditState({ ...imported });
+      } catch {
+        alert('Failed to parse persona JSON file. Please check the format.');
+      }
+    };
+    reader.readAsText(file);
+  }, [addPersona]);
+
+  // Export a specific persona to JSON file (used per-persona in sidebar)
+  const handleExportPersona = useCallback((persona: Persona) => {
+    const blob = new Blob([JSON.stringify(persona, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `persona-${persona.name.toLowerCase().replace(/\s+/g, '-')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, []);
 
   // Generate a UPP from the current persona
   const generatedUPP: UniversalPersonaPrompt | null = useMemo(() => {
@@ -391,12 +510,23 @@ const PersonaEditor: React.FC = () => {
               <Button variant="ghost" size="sm" onClick={() => setUppImportModalOpen(true)} title="Import UPP">
                 <FileText className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setImportModalOpen(true)} title="Import JSON">
+              <Button variant="ghost" size="sm" onClick={() => setImportModalOpen(true)} title="Import JSON (paste)">
                 <Upload className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleImportFromFile} title="Import from JSON file">
+                <FileUp className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="sm" onClick={handleNew}>
                 <Plus className="h-4 w-4" />
               </Button>
+              {/* Hidden file input for file-based import */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleFileSelected}
+              />
             </div>
           </div>
           <Input
@@ -408,24 +538,76 @@ const PersonaEditor: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-auto p-2 space-y-1">
-          {filteredPersonas.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => handleSelect(p.id)}
-              className={clsx(
-                'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
-                selectedId === p.id
-                  ? 'bg-forge-600/10 text-forge-700 dark:bg-forge-600/20 dark:text-forge-300'
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-surface-dark-2',
-              )}
-            >
-              <Avatar name={p.name || '?'} color={p.avatar_color} size="sm" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{p.name || 'Unnamed'}</p>
-                <p className="truncate text-xs text-gray-500 dark:text-gray-400">{p.tagline || 'No tagline'}</p>
-              </div>
-            </button>
-          ))}
+          {filteredPersonas.map((p) => {
+            const stats = personaStats[p.id];
+            return (
+              <button
+                key={p.id}
+                onClick={() => handleSelect(p.id)}
+                className={clsx(
+                  'group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-200 border-l-[3px]',
+                  selectedId === p.id
+                    ? 'bg-forge-600/10 text-forge-700 dark:bg-forge-600/20 dark:text-forge-300 shadow-sm'
+                    : 'border-l-transparent text-gray-700 hover:bg-gray-50 hover:shadow-sm hover:-translate-y-px dark:text-gray-300 dark:hover:bg-surface-dark-2',
+                )}
+                style={{
+                  borderLeftColor: selectedId === p.id ? (p.avatar_color || '#6366F1') : undefined,
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedId !== p.id) {
+                    (e.currentTarget as HTMLButtonElement).style.borderLeftColor = p.avatar_color || '#6366F1';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedId !== p.id) {
+                    (e.currentTarget as HTMLButtonElement).style.borderLeftColor = 'transparent';
+                  }
+                }}
+              >
+                <Avatar name={p.name || '?'} color={p.avatar_color} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-medium">{p.name || 'Unnamed'}</p>
+                    {stats && stats.debateCount > 0 && (
+                      <span className="shrink-0 inline-flex items-center rounded-full bg-forge-100 px-1.5 py-0.5 text-[10px] font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-300">
+                        {stats.debateCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">{p.tagline || 'No tagline'}</p>
+                  {p.expertise.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {p.expertise.slice(0, 3).map((exp) => (
+                        <span
+                          key={exp}
+                          className="inline-block rounded-full px-1.5 py-px text-[10px] font-medium leading-tight"
+                          style={{
+                            backgroundColor: (p.avatar_color || '#6366F1') + '18',
+                            color: p.avatar_color || '#6366F1',
+                          }}
+                        >
+                          {exp}
+                        </span>
+                      ))}
+                      {p.expertise.length > 3 && (
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                          +{p.expertise.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {/* Per-persona export button (visible on hover) */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleExportPersona(p); }}
+                  className="shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-surface-dark-3"
+                  title="Export persona as JSON"
+                >
+                  <Download className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+              </button>
+            );
+          })}
 
           {filteredPersonas.length === 0 && (
             <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
@@ -623,7 +805,15 @@ const PersonaEditor: React.FC = () => {
             <div className="hidden w-80 shrink-0 lg:block">
               <div className="sticky top-0">
                 <p className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Preview</p>
-                <PersonaPreview persona={editState} />
+                <PersonaPreview
+                  persona={editState}
+                  debateCount={personaStats[editState.id]?.debateCount ?? 0}
+                  winRate={
+                    personaStats[editState.id]?.total
+                      ? (personaStats[editState.id].wins / personaStats[editState.id].total) * 100
+                      : undefined
+                  }
+                />
               </div>
             </div>
           </div>
