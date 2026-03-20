@@ -1,392 +1,201 @@
-# 🎙️ DebateForge
+<p align="center">
+<pre>
+     ____       __          __       ______
+    / __ \___  / /_  ____ _/ /____  / ____/___  _________ ____
+   / / / / _ \/ __ \/ __ `/ __/ _ \/ /_  / __ \/ ___/ __ `/ _ \
+  / /_/ /  __/ /_/ / /_/ / /_/  __/ __/ / /_/ / /  / /_/ /  __/
+ /_____/\___/_.___/\__,_/\__/\___/_/    \____/_/   \__, /\___/
+                                                   /____/
+</pre>
+</p>
 
-**AI-Powered Debate Arena — Watch AI Models Clash on Any Topic**
+<p align="center">
+  <strong>AI-Powered Debate Arena -- Watch AI Models Clash on Any Topic</strong>
+</p>
 
-DebateForge is a desktop application that orchestrates structured, evidence-backed debates between AI models. Mix and match local and cloud-hosted models, assign custom personas with unique rhetorical styles, and watch them go head-to-head on any topic you choose — complete with live source verification.
+<p align="center">
+  <a href="#getting-started"><img alt="Build: passing" src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square" /></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" /></a>
+  <a href="package.json"><img alt="Version: 1.0.0" src="https://img.shields.io/badge/version-1.0.0-orange?style=flat-square" /></a>
+  <img alt="Platform: Windows | macOS | Linux" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square" />
+  <img alt="Electron 33.4" src="https://img.shields.io/badge/Electron-33.4-47848f?style=flat-square&logo=electron&logoColor=white" />
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black" />
+  <img alt="TypeScript 5.7" src="https://img.shields.io/badge/TypeScript-5.7-3178c6?style=flat-square&logo=typescript&logoColor=white" />
+</p>
 
-Built with WiX Toolset for Windows distribution.
+---
+
+**DebateForge** is a cross-platform desktop application that orchestrates structured, evidence-backed debates between AI models. Configure custom personas, select from cloud or local models, choose a formal debate format, and watch AI debaters engage in rigorous argumentation -- complete with real-time evidence verification, logical fallacy detection, and ELO-based rankings.
+
+> Pit Claude against GPT-4o. Run a local Llama model against Gemini. Assign distinct personas, enforce formal debate rules, and let the arguments speak for themselves.
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
 - [Key Features](#key-features)
-- [How It Works](#how-it-works)
-- [Debate Framework](#debate-framework)
-- [Persona System](#persona-system)
-- [Evidence & Source Verification](#evidence--source-verification)
 - [Supported Models](#supported-models)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Building from Source](#building-from-source)
+- [Getting Started](#getting-started)
+- [Available Scripts](#available-scripts)
 - [Configuration](#configuration)
-- [Usage Guide](#usage-guide)
-- [Roadmap](#roadmap)
+- [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
+- [Debate Formats](#debate-formats)
+- [Persona System](#persona-system)
+- [Tech Stack](#tech-stack)
+- [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-## Overview
-
-DebateForge brings the rigor of competitive debate to AI. Instead of chatting with a single model, you set up a structured debate between two or more AI participants — each powered by a different (or the same) model, each embodying a distinct persona with its own worldview, argumentation style, and rhetorical strategy.
-
-Every claim must be backed by evidence. When a debater cites a source, DebateForge opens a built-in browser panel, navigates to the page, scrolls to the exact passage, and highlights it — so you can verify the argument in real time.
-
-The UI is designed to feel as polished and intuitive as the interfaces you already know from Claude, ChatGPT, and Gemini.
-
----
-
 ## Key Features
 
-### 🤖 Multi-Model Debate Engine
-- Pit any combination of AI models against each other — cloud vs. local, large vs. small, OpenAI vs. Anthropic vs. open-source.
-- Run same-model debates with different personas to explore how framing shapes argumentation.
-- Support for 2-player head-to-head, panel debates (3+), and round-robin tournament formats.
+### Debate Engine
 
-### 🎭 Custom Persona System
-- Create detailed personas that define a debater's identity: background, expertise, rhetorical style, ideological leanings, and argumentation preferences.
-- Personas are model-agnostic — the same persona definition works whether it's running on GPT-4, Claude, Llama, Mistral, or any other supported model.
-- Comes with a library of pre-built personas (e.g., "Constitutional Originalist," "Utilitarian Philosopher," "Devil's Advocate," "Data-Driven Skeptic").
+- **Multi-model AI debates** -- pit any combination of cloud and local models against each other (Claude vs GPT vs Gemini vs Ollama vs LM Studio)
+- **3 formal debate formats** -- Oxford Union (10 turns), Lincoln-Douglas (8 turns), Parliamentary (8 turns), each with distinct phase sequences
+- **Streaming responses** with extended thinking support for models that provide chain-of-thought reasoning
+- **Audience voting panel** -- live For / Against / Undecided tallying to track opinion shifts
+- **Momentum tracking visualization** -- see which debater is gaining rhetorical ground turn by turn
+- **Word count analytics** -- per-turn word badges and post-debate word statistics
 
-### 🔄 Universal Memory Import/Export
-Inspired by Claude's project and memory features, DebateForge includes a portable persona memory system:
+### Analysis and Scoring
 
-- **Export**: Any persona can export its accumulated knowledge about the user's preferences, debate history, and interaction patterns into a **Universal Persona Prompt (UPP)** — a structured, plain-language document designed to be understood by any model, including the smallest and least capable ones.
-- **Import**: Load a UPP into any persona on any model. The prompt is written in clear, explicit natural language (no model-specific tokens or formatting tricks) so that even a 1B-parameter local model can parse and act on it.
-- **Portability**: UPP files are human-readable `.json` documents. You can edit them by hand, share them, or version-control them.
-- **Privacy**: All memory data stays local. Nothing is sent to any server unless you explicitly configure a cloud model to receive it.
+- **Real-time evidence verification** with source credibility scoring
+- **Logical fallacy detection** -- identifies 14+ patterns including straw man, ad hominem, false dichotomy, appeal to authority, and more
+- **ELO rating system** with a persistent model leaderboard tracking wins, losses, and performance over time
+- **Tournament mode** -- single-elimination and round-robin brackets for multi-model competitions
 
-### 📰 Live Evidence & Source Verification
-When a debater makes a factual claim and cites a source:
+### Persona System
 
-1. A **built-in browser panel** opens alongside the debate view.
-2. The browser navigates to the cited URL.
-3. The page **auto-scrolls to the relevant passage** and highlights it.
-4. The debater provides a **spoken/written explanation** of why this evidence supports their argument and how it connects to the broader point.
-5. The opposing debater can challenge the source's credibility, relevance, or interpretation.
+- **8 built-in personas** with distinct rhetorical styles, expertise areas, and argumentation strategies
+- **Unlimited custom personas** -- define background, ideology, debate behavior, evidence preferences, and more
+- **Universal Persona Prompt (UPP)** -- export and import persona memory across models and sessions
 
-This ensures that debates stay grounded in verifiable information rather than hallucinated citations.
+### Productivity and Organization
 
-### 🎨 Modern, Polished UI
-- Clean, minimal interface inspired by the design language of Claude, ChatGPT, and Gemini.
-- Dark and light mode with smooth transitions.
-- Split-pane layout: debate transcript on one side, evidence browser on the other.
-- Real-time streaming of debate responses with typing indicators.
-- Responsive layout that works on any screen size.
-- Keyboard shortcuts for power users.
+- **Debate bookmarks** -- save and navigate to key moments in any debate
+- **Tags and notes** -- organize debates with custom tags and attach free-form notes
+- **Debate templates** -- save and load debate configurations as reusable presets with 10 quick-start topics
+- **Import / export debates as JSON** for backup and sharing
+- **Export to HTML** -- generate self-contained, shareable debate pages
+- **Full-text search** across all debates, models, personas, and content
 
----
+### User Experience
 
-## How It Works
+- **Voice synthesis** for debate playback with per-debater voice assignment (Web Speech API)
+- **Debate replay** -- step-through playback with play / pause / skip controls
+- **Speed control** -- adjustable delay slider for auto-run pacing
+- **Dark / light / system theme** with smooth transitions
+- **Command palette** (Cmd+K / Ctrl+K) for fast navigation
+- **Keyboard shortcuts** throughout -- Space (pause), Enter (continue), Escape (stop), V (voice toggle)
+- **Activity heatmap** and **debate word cloud** for visual analytics
+- **12-language support** with prompt-level enforcement
+- **Notification sounds** -- audio cues for turn completion, agent switch, and debate end
+- **Konami code easter egg** -- because why not
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    DebateForge                       │
-│                                                     │
-│  ┌─────────┐    ┌──────────────┐    ┌───────────┐  │
-│  │  User    │───▶│ Debate       │───▶│ Model     │  │
-│  │  Config  │    │ Orchestrator │    │ Router    │  │
-│  └─────────┘    └──────────────┘    └───────────┘  │
-│                        │                  │         │
-│                        ▼                  ▼         │
-│                 ┌──────────────┐   ┌────────────┐  │
-│                 │ Debate       │   │ Local /    │  │
-│                 │ Framework    │   │ Cloud APIs │  │
-│                 │ Engine       │   └────────────┘  │
-│                 └──────────────┘                    │
-│                        │                            │
-│                        ▼                            │
-│            ┌───────────────────────┐                │
-│            │ Evidence Verification │                │
-│            │ (Embedded Browser)    │                │
-│            └───────────────────────┘                │
-└─────────────────────────────────────────────────────┘
-```
+### Platform
 
-1. **Choose a topic** — Enter any debate topic, from "Should AI be regulated?" to "Is pineapple acceptable on pizza?"
-2. **Select debaters** — Pick models and assign personas to each side.
-3. **Set the format** — Choose a debate structure (Lincoln-Douglas, Parliamentary, Oxford-style, free-form, etc.).
-4. **Watch the debate unfold** — Models take turns presenting arguments, cross-examining, and rebutting — all in real time.
-5. **Verify evidence** — Click any citation to open it in the evidence panel and see the source in context.
-6. **Judge the outcome** — Use the built-in scoring rubric, or let a separate AI model act as judge.
-
----
-
-## Debate Framework
-
-DebateForge uses industry-proven debate methodologies adapted for AI:
-
-### Supported Formats
-
-| Format | Description | Rounds |
-|---|---|---|
-| **Lincoln-Douglas** | One-on-one values debate with constructive, cross-exam, and rebuttal phases | 6 |
-| **Parliamentary** | Two teams, proposing and opposing a motion with points of information | 8 |
-| **Oxford-Style** | Formal motion debate with audience (user) polling before and after | 4 |
-| **Cross-Examination (Policy)** | Evidence-heavy format with dedicated cross-exam periods | 8 |
-| **Socratic** | Question-driven dialogue aimed at uncovering contradictions | Flexible |
-| **Free-Form** | Unstructured back-and-forth, closest to a natural argument | Flexible |
-
-### Argumentation Standards
-
-Each debater is prompted to follow structured argumentation principles:
-
-- **Claim → Warrant → Impact**: Every argument must state a claim, provide reasoning (warrant), and explain why it matters (impact).
-- **Source Obligation**: Factual claims must include a citation. Unsourced claims are flagged.
-- **Rebuttal Requirement**: Debaters must directly address opposing arguments, not just present their own.
-- **Logical Fallacy Detection**: An optional background monitor flags common fallacies (straw man, ad hominem, false dichotomy, etc.) in real time.
-- **Steel-Manning**: Debaters are prompted to represent the strongest version of the opposing argument before countering it.
-
----
-
-## Persona System
-
-### Creating a Persona
-
-Personas are defined in a structured `.json` file:
-
-```json
-{
-  "name": "Dr. Empirica",
-  "tagline": "If you can't measure it, it doesn't matter.",
-  "background": "Research scientist with 20 years in evidence-based policy. Deeply skeptical of anecdotal reasoning.",
-  "expertise": ["statistics", "public health", "economics", "research methodology"],
-  "rhetorical_style": "Socratic, data-driven, calm but persistent. Favors meta-analyses over individual studies.",
-  "ideological_leanings": "Pragmatic centrist. Follows the data wherever it leads.",
-  "argumentation_preferences": {
-    "evidence_weight": "heavy",
-    "emotional_appeals": "minimal",
-    "concession_willingness": "high",
-    "humor": "dry, occasional"
-  },
-  "debate_behavior": {
-    "opening_strategy": "Define terms precisely, establish burden of proof",
-    "rebuttal_strategy": "Attack methodology and sample sizes of opposing evidence",
-    "closing_strategy": "Summarize with a clear cost-benefit framework"
-  }
-}
-```
-
-### Universal Persona Prompt (UPP) — Memory Export/Import
-
-The UPP system allows any persona to carry learned context across models and sessions:
-
-```json
-{
-  "upp_version": "1.0",
-  "generated_at": "2026-03-16T14:30:00Z",
-  "user_profile": {
-    "preferred_topics": ["AI ethics", "climate policy", "education reform"],
-    "expertise_level": "intermediate — understands core arguments but appreciates detailed explanations",
-    "debate_preferences": "prefers evidence-heavy formats, dislikes purely emotional appeals",
-    "interaction_style": "asks probing follow-up questions, values concise responses"
-  },
-  "persona_state": {
-    "name": "Dr. Empirica",
-    "accumulated_positions": [
-      "Has argued in favor of carbon taxation based on Nordhaus models",
-      "Conceded that GDP is an incomplete measure of societal wellbeing"
-    ],
-    "user_relationship_notes": "User frequently challenges statistical methodology — prepare robust sourcing"
-  },
-  "instructions_for_any_model": "You are Dr. Empirica. You are a calm, data-driven debater who insists on empirical evidence for every claim. You prefer meta-analyses and systematic reviews over individual studies. You are willing to concede points when the evidence is against you. The user you are interacting with has intermediate knowledge and prefers evidence-heavy discussion. They will challenge your sources, so be thorough."
-}
-```
-
-The `instructions_for_any_model` field is the core portability feature — it's written in plain, unambiguous natural language that any model can interpret, from GPT-4o to a quantized 3B local model.
-
----
-
-## Evidence & Source Verification
-
-### How Citation Verification Works
-
-```
-Debater says:
-"According to a 2024 Nature study, global average temperatures
-rose 1.2°C above pre-industrial levels..."
-
-           │
-           ▼
-
-┌─────────────────────────────────────┐
-│  EVIDENCE PANEL                     │
-│  ┌───────────────────────────────┐  │
-│  │ 🌐 nature.com/articles/...   │  │
-│  │                               │  │
-│  │  ...                          │  │
-│  │  ┌─────────────────────────┐  │  │
-│  │  │ ██ HIGHLIGHTED PASSAGE ██│  │  │
-│  │  │ "The global mean surface │  │  │
-│  │  │  temperature increased   │  │  │
-│  │  │  by 1.2°C relative to..." │  │  │
-│  │  └─────────────────────────┘  │  │
-│  │                               │  │
-│  └───────────────────────────────┘  │
-│                                     │
-│  💬 DEBATER EXPLANATION:            │
-│  "This passage confirms that the    │
-│   warming threshold I cited is      │
-│   supported by peer-reviewed data.  │
-│   Note that this is a Nature        │
-│   publication — impact factor 69.5  │
-│   — which speaks to the rigor of    │
-│   the methodology..."               │
-└─────────────────────────────────────┘
-```
-
-### Verification Features
-
-- **Auto-scroll & highlight**: The embedded browser finds and highlights the cited passage on the page.
-- **Source credibility scoring**: Automatically evaluates source type (peer-reviewed journal, government report, news outlet, blog, social media) and displays a credibility indicator.
-- **Dead link handling**: If a URL is unreachable, the debater is prompted to provide an alternative source or retract the claim.
-- **Screenshot archival**: Evidence screenshots are saved locally so debates remain verifiable even if pages change.
+- **Cross-platform** -- Windows (NSIS installer + portable), macOS (DMG), Linux (AppImage + deb)
+- **SQLite database** for fast, local-first data persistence
+- **161 tests** across 13 test files
 
 ---
 
 ## Supported Models
 
-### Cloud Models
+### Cloud Providers
 
-| Provider | Models | API Key Required |
+| Provider | Models | Requires API Key |
 |---|---|---|
-| **Anthropic** | Claude Opus 4.6, Sonnet 4.6, Haiku 4.5 | Yes |
+| **Anthropic** | Claude Opus, Sonnet, Haiku | Yes |
 | **OpenAI** | GPT-4o, GPT-4o-mini, o1, o3 | Yes |
 | **Google** | Gemini 2.5 Pro, Gemini 2.5 Flash | Yes |
-| **Mistral** | Mistral Large, Mistral Medium | Yes |
-| **Groq** | Llama, Mixtral (fast inference) | Yes |
 
-### Local Models (via Ollama / LM Studio / llama.cpp)
+### Local Models (via Ollama / LM Studio)
 
-| Model | Min. VRAM | Recommended For |
+| Runtime | Default Endpoint | Setup |
 |---|---|---|
-| Llama 3.x (8B) | 6 GB | Fast, general-purpose debating |
-| Mistral 7B | 6 GB | Balanced reasoning and speed |
-| Mixtral 8x7B | 24 GB | Strong multi-topic performance |
-| Qwen 2.5 (7B/14B/72B) | 6–48 GB | Multilingual debates |
-| Phi-3 (3.8B) | 4 GB | Lightweight, good for UPP testing |
-| DeepSeek-R1 | 16+ GB | Strong reasoning and evidence chains |
+| **Ollama** | `http://localhost:11434` | `ollama pull <model>` |
+| **LM Studio** | `http://localhost:1234/v1` | Download model in LM Studio UI |
 
-Any model accessible via an OpenAI-compatible API endpoint is supported.
+Any model accessible through an OpenAI-compatible API endpoint is supported. Run Llama, Mistral, Mixtral, Qwen, Phi, DeepSeek, or any other model you can serve locally.
 
 ---
 
-## Architecture
-
-```
-DebateForge/
-├── src/
-│   ├── core/
-│   │   ├── debate_engine/          # Orchestrates turn-taking, timers, format rules
-│   │   ├── model_router/           # Routes requests to local or cloud models
-│   │   ├── persona_manager/        # Loads, saves, and applies persona definitions
-│   │   ├── upp_engine/             # Universal Persona Prompt generation and parsing
-│   │   ├── evidence_verifier/      # URL fetching, passage matching, highlighting
-│   │   └── fallacy_detector/       # Real-time logical fallacy detection
-│   ├── ui/
-│   │   ├── components/             # Reusable UI components
-│   │   ├── views/
-│   │   │   ├── DebateView/         # Main debate transcript + controls
-│   │   │   ├── EvidencePanel/      # Embedded browser for source verification
-│   │   │   ├── PersonaEditor/      # Create and edit personas
-│   │   │   ├── SetupWizard/        # Topic, model, format selection
-│   │   │   └── TournamentView/     # Multi-round tournament bracket
-│   │   ├── themes/                 # Light/dark theme definitions
-│   │   └── App.tsx                 # Root application component
-│   ├── services/
-│   │   ├── anthropic.ts            # Anthropic API integration
-│   │   ├── openai.ts               # OpenAI API integration
-│   │   ├── google.ts               # Google Gemini integration
-│   │   ├── ollama.ts               # Local model integration via Ollama
-│   │   └── lmstudio.ts             # Local model integration via LM Studio
-│   └── utils/
-│       ├── prompt_builder.ts       # Constructs debate prompts per format and persona
-│       ├── citation_parser.ts      # Extracts and validates citations from responses
-│       └── scoring.ts              # Debate scoring and judging logic
-├── personas/                       # Pre-built persona library
-├── installer/
-│   ├── Product.wxs                 # WiX installer definition
-│   ├── UI.wxs                      # Custom installer UI
-│   └── Bundle.wxs                  # Burn bootstrapper for prerequisites
-├── assets/                         # Icons, fonts, images
-├── docs/                           # Extended documentation
-├── tests/                          # Unit and integration tests
-├── README.md
-├── LICENSE
-└── package.json
-```
-
-### Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **UI Framework** | Electron + React + TypeScript |
-| **Styling** | Tailwind CSS |
-| **Embedded Browser** | Electron BrowserView / WebContents |
-| **Local Model Runtime** | Ollama / LM Studio / llama.cpp (user's choice) |
-| **Cloud API Clients** | Anthropic SDK, OpenAI SDK, Google AI SDK |
-| **State Management** | Zustand |
-| **Debate Logging** | SQLite (local) |
-| **Installer** | WiX Toolset v4+ |
-| **Build System** | Electron Builder + WiX |
-
----
-
-## Installation
-
-### From Installer (Recommended)
-
-1. Download `DebateForge-Setup.exe` from the [Releases](https://github.com/your-username/debateforge/releases) page.
-2. Run the installer — it will handle prerequisites (.NET Runtime, Electron dependencies).
-3. Launch DebateForge from the Start Menu or Desktop shortcut.
-
-### System Requirements
-
-| Component | Minimum | Recommended |
-|---|---|---|
-| **OS** | Windows 10 (64-bit) | Windows 11 |
-| **RAM** | 4 GB | 16 GB (32 GB for large local models) |
-| **Storage** | 500 MB (app only) | 20+ GB (with local models) |
-| **GPU** | Not required for cloud-only | NVIDIA GPU with 6+ GB VRAM for local models |
-| **Internet** | Required for cloud models | Required for evidence verification |
-
----
-
-## Building from Source
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
-- npm or yarn
-- .NET SDK 8.0+ (for WiX Toolset)
-- WiX Toolset v4+ (`dotnet tool install --global wix`)
-- Visual Studio 2022+ (optional, for WiX VS integration)
+- **Node.js** 18 or later
+- **npm** (included with Node.js)
+- At least one AI provider: an API key for Anthropic / OpenAI / Google, **or** a local model runtime (Ollama / LM Studio)
 
-### Steps
+### Installation
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/your-username/debateforge.git
 cd debateforge
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Run in development mode
-npm run dev
+# 3. Configure environment
+cp .env.example .env
+# Open .env and add your API keys (at least one provider is required)
 
-# Build the Electron app
+# 4. Start in development mode
+npm run dev
+```
+
+### Production Build
+
+```bash
+# Build the application
 npm run build
 
-# Build the WiX installer
-cd installer
-wix build Product.wxs -o ../dist/DebateForge-Setup.msi
-
-# Or build a bootstrapper bundle (includes prerequisites)
-wix build Bundle.wxs -o ../dist/DebateForge-Setup.exe
+# Run the built application
+npm start
 ```
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure at minimum one AI provider:
+
+```env
+# At least one API key is required
+DEBATEFORGE_ANTHROPIC_KEY=sk-ant-...
+DEBATEFORGE_OPENAI_KEY=sk-...
+DEBATEFORGE_GOOGLE_KEY=AI...
+
+# Local model endpoints (defaults shown)
+DEBATEFORGE_OLLAMA_ENDPOINT=http://localhost:11434
+DEBATEFORGE_LMSTUDIO_ENDPOINT=http://localhost:1234/v1
+
+# App settings
+DEBATEFORGE_THEME=system          # light | dark | system
+DEBATEFORGE_STREAMING=true
+DEBATEFORGE_FALLACY_DETECTION=true
+DEBATEFORGE_LANGUAGE=en           # ISO 639-1 code
+```
+
+---
+
+## Available Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development mode (Electron + Vite with hot reload) |
+| `npm run build` | Build renderer (Vite) and main process (TypeScript) for production |
+| `npm start` | Launch the built Electron application |
+| `npm run package:win` | Package as Windows installer (NSIS + portable) |
+| `npm run package:mac` | Package as macOS DMG |
+| `npm run package:linux` | Package as Linux AppImage and deb |
+| `npm run package:all` | Build for all platforms |
+| `npm run lint` | Run ESLint across the source tree |
+| `npm test` | Run the full Vitest test suite |
 
 ---
 
@@ -394,115 +203,279 @@ wix build Bundle.wxs -o ../dist/DebateForge-Setup.exe
 
 ### API Keys
 
-On first launch, DebateForge will prompt you to enter API keys for the cloud providers you want to use. Keys are stored locally in an encrypted configuration file.
-
-You can also set them via environment variables:
-
-```
-DEBATEFORGE_ANTHROPIC_KEY=sk-ant-...
-DEBATEFORGE_OPENAI_KEY=sk-...
-DEBATEFORGE_GOOGLE_KEY=AI...
-```
+On first launch, navigate to **Settings** to enter API keys for the cloud providers you want to use. Alternatively, set them in your `.env` file before starting the application.
 
 ### Local Model Setup
 
 1. Install [Ollama](https://ollama.com) or [LM Studio](https://lmstudio.ai).
-2. Pull a model (e.g., `ollama pull llama3.1`).
-3. In DebateForge settings, point to your local endpoint (default: `http://localhost:11434`).
+2. Pull or download a model (e.g., `ollama pull llama3.1`).
+3. Ensure the server is running -- DebateForge will auto-detect models at the configured endpoints.
+
+### Themes
+
+Switch between **dark**, **light**, and **system** themes from Settings or through the command palette (Cmd+K / Ctrl+K).
 
 ---
 
-## Usage Guide
+## Project Structure
 
-### Quick Start: Your First Debate
-
-1. **Launch** DebateForge.
-2. **Click** "New Debate."
-3. **Enter a topic**: e.g., *"Should universal basic income replace existing welfare programs?"*
-4. **Configure Debater A**: Select Claude Sonnet 4.6, assign the "Policy Wonk" persona, position: FOR.
-5. **Configure Debater B**: Select Llama 3.1 (local), assign the "Fiscal Conservative" persona, position: AGAINST.
-6. **Choose format**: Oxford-Style (4 rounds).
-7. **Click** "Start Debate" and watch them go.
-
-### Importing/Exporting Persona Memory
-
-**Export:**
-1. Open a persona's settings.
-2. Click "Export Memory (UPP)."
-3. Save the `.json` file anywhere.
-
-**Import:**
-1. Open any persona's settings (can be on a different model).
-2. Click "Import Memory (UPP)."
-3. Select the `.json` file.
-4. The persona now has full context about your preferences and past interactions.
+```
+debateforge/
+├── src/
+│   ├── core/                          # Core business logic engines
+│   │   ├── debate_engine/             # Turn orchestration, format rules, phase sequencing
+│   │   │   ├── index.ts               # Main debate engine
+│   │   │   └── formats.ts             # Oxford Union, Lincoln-Douglas, Parliamentary definitions
+│   │   ├── elo/                       # ELO rating calculations and leaderboard management
+│   │   ├── evidence_verifier/         # Source credibility scoring and claim verification
+│   │   ├── fallacy_detector/          # 14+ logical fallacy pattern recognition
+│   │   ├── highlights/                # Debate highlight extraction
+│   │   ├── model_router/              # Routes requests to the correct provider/endpoint
+│   │   ├── momentum/                  # Debate momentum tracking and scoring
+│   │   ├── persona_manager/           # Persona CRUD, built-in library, custom personas
+│   │   └── upp_engine/                # Universal Persona Prompt generation and parsing
+│   ├── main/                          # Electron main process
+│   ├── services/                      # API provider integrations
+│   │   ├── anthropic.ts               # Anthropic Claude SDK integration
+│   │   ├── openai.ts                  # OpenAI SDK integration
+│   │   ├── google.ts                  # Google Generative AI integration
+│   │   ├── ollama.ts                  # Ollama local model client
+│   │   ├── lmstudio.ts               # LM Studio local model client
+│   │   └── model-router.ts           # Unified model routing service
+│   ├── ui/                            # React frontend
+│   │   ├── App.tsx                    # Root application component and routing
+│   │   ├── store.ts                   # Zustand global state store
+│   │   ├── main.tsx                   # React entry point
+│   │   ├── index.css                  # Tailwind CSS entry and global styles
+│   │   ├── components/                # 50+ reusable UI components
+│   │   │   ├── CommandPalette.tsx     # Cmd+K command palette
+│   │   │   ├── DebateBookmarks.tsx    # Bookmark management
+│   │   │   ├── DebateReplay.tsx       # Step-through playback controls
+│   │   │   ├── DebateWordCloud.tsx    # Word frequency visualization
+│   │   │   ├── ExportHTML.tsx         # Self-contained HTML export
+│   │   │   ├── MarkdownRenderer.tsx   # Rich markdown rendering for turns
+│   │   │   ├── MomentumGraph.tsx      # Momentum tracking chart
+│   │   │   ├── VoiceSynthesis.tsx     # Web Speech API TTS controls
+│   │   │   └── ...                    # Additional components
+│   │   ├── hooks/                     # Custom React hooks
+│   │   │   └── useKeyboardShortcuts.ts
+│   │   ├── themes/                    # Theme definitions (dark/light/system)
+│   │   └── views/                     # Page-level view components
+│   │       ├── DebateView/            # Main debate transcript and controls
+│   │       ├── EvidencePanel/         # Source verification panel
+│   │       ├── HomeView.tsx           # Dashboard with activity heatmap
+│   │       ├── LeaderboardView/       # ELO rankings and model statistics
+│   │       ├── PersonaEditor/         # Create and edit personas
+│   │       ├── SetupWizard/           # New debate configuration wizard
+│   │       ├── SettingsView.tsx       # API keys, preferences, theme selection
+│   │       ├── StatisticsView.tsx     # Analytics dashboard
+│   │       └── TournamentView/        # Tournament bracket management
+│   ├── types.ts                       # Shared TypeScript type definitions
+│   └── utils/                         # Utility modules
+│       ├── prompt_builder.ts          # Constructs debate prompts per format and persona
+│       ├── citation_parser.ts         # Extracts and validates citations from responses
+│       └── scoring.ts                 # Debate scoring and judging logic
+├── tests/                             # 13 test files, 161 tests
+│   ├── debate_engine.test.ts
+│   ├── debate_engine_formats.test.ts
+│   ├── elo.test.ts
+│   ├── evidence_verifier.test.ts
+│   ├── fallacy_detector.test.ts
+│   ├── persona_manager.test.ts
+│   ├── scoring.test.ts
+│   └── ...
+├── personas/                          # Pre-built persona library (JSON)
+├── assets/                            # App icons (ico, icns, png)
+├── installer/                         # WiX installer definitions (Windows MSI)
+├── docs/                              # Extended documentation
+├── .env.example                       # Environment variable template
+├── package.json
+├── tsconfig.json                      # Renderer TypeScript config
+├── tsconfig.main.json                 # Main process TypeScript config
+├── vite.config.ts                     # Vite build configuration
+├── tailwind.config.js                 # Tailwind CSS configuration
+├── postcss.config.mjs                 # PostCSS configuration
+└── LICENSE                            # MIT License
+```
 
 ---
 
-## Roadmap
+## Architecture Overview
 
-- [x] Core debate engine with turn management
-- [x] Cloud model integration (Anthropic, OpenAI, Google)
-- [x] Local model support via Ollama
-- [x] Custom persona system
-- [x] Evidence browser panel with auto-scroll
-- [x] True multi-agent debate — each debater uses its own model with distinct routing
-- [x] Configurable Housemaster — choose model and persona for the moderator
-- [x] Agent transition indicators — clear visual handoff between debaters
-- [x] Model diversity warnings — hints when all debaters use the same model
-- [x] Debate transcript export — download or copy as Markdown
-- [x] Auto-scoring with breakdown — argumentation, evidence, rebuttal, rhetoric
-- [x] Logical fallacy detection overlay
-- [x] Post-debate opinion shift tracking
-- [x] Enhanced debate history with matchup display
-- [x] Universal Persona Prompt (UPP) v1.0 — export/import cross-model persona prompts
-- [x] Tournament mode — functional brackets with single-elimination & round-robin
-- [x] Voice synthesis — TTS with per-debater voice assignment (Web Speech API)
-- [x] Keyboard shortcuts — Space (pause), Enter (continue), Escape (stop), V (voice)
-- [x] Audience mode — live voting panel with For/Against/Undecided tallying
-- [x] Multilingual debate support — 12 languages with prompt-level enforcement
-- [x] Custom debate formats — Lincoln-Douglas (1v1) and Parliamentary added
-- [x] Statistics dashboard — comprehensive analytics with model usage, fallacy stats, win rates
-- [x] Quick rematch — one-click restart with swapped sides
-- [x] Debate search — full-text search across all debates, models, personas, and content
-- [x] Turn timer — live elapsed time display during generation
-- [x] Auto-topic generator — 18 curated topics with random selection
-- [x] Format selection — choose Oxford Union, Lincoln-Douglas, or Parliamentary in setup
-- [x] Linux and macOS builds — electron-builder targets for DMG, AppImage, deb
-- [x] Debate bookmarks — save and navigate to key moments
-- [x] Notification sounds — audio cues for turn completion, agent switch, debate end
-- [x] Multi-format engine fix — engine now uses each format's own turn sequence
-- [x] Comprehensive test suite — 161 tests across 13 files
-- [x] Markdown rendering — rich formatting for debate turns (bold, links, lists, code)
-- [x] Debate templates — save and load debate configurations as reusable presets
-- [x] Debate tags — organize and filter debates with custom tags
-- [x] Auto-run speed control — adjustable delay slider in the toolbar
-- [x] Export to HTML — self-contained shareable debate page
-- [x] Word count analytics — per-turn word badges and post-debate word stats
-- [x] Debate notes — free-form notes attached to each debate
-- [x] Debate replay — step-through playback with play/pause/skip controls
+DebateForge follows a layered architecture with clear separation between the core debate logic, API integrations, and the UI layer.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        RENDERER PROCESS                          │
+│                                                                  │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│   │  Setup        │  │  Debate      │  │  Tournament /        │  │
+│   │  Wizard       │  │  View        │  │  Leaderboard / Stats │  │
+│   └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘  │
+│          │                 │                      │              │
+│          └─────────────────┼──────────────────────┘              │
+│                            │                                     │
+│                    ┌───────▼────────┐                            │
+│                    │  Zustand Store  │                            │
+│                    └───────┬────────┘                            │
+│                            │                                     │
+├────────────────────────────┼─────────────────────────────────────┤
+│                     CORE ENGINES                                 │
+│                            │                                     │
+│   ┌────────────────────────▼────────────────────────────────┐   │
+│   │                  Debate Engine                            │   │
+│   │  Turn orchestration | Format rules | Phase sequencing    │   │
+│   └──┬─────────┬──────────┬──────────┬──────────┬───────────┘   │
+│      │         │          │          │          │               │
+│      ▼         ▼          ▼          ▼          ▼               │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌──────────┐     │
+│  │Persona │ │Evidence│ │Fallacy │ │  ELO   │ │Momentum  │     │
+│  │Manager │ │Verifier│ │Detector│ │ System │ │ Tracker  │     │
+│  └────────┘ └────────┘ └────────┘ └────────┘ └──────────┘     │
+│                                                                  │
+├──────────────────────────────────────────────────────────────────┤
+│                     MODEL ROUTER                                 │
+│                                                                  │
+│   ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────┐ ┌────────┐ │
+│   │ Anthropic│ │  OpenAI  │ │  Google  │ │Ollama │ │LM      │ │
+│   │  (Claude)│ │(GPT/o1/o3│ │ (Gemini) │ │(local)│ │Studio  │ │
+│   └──────────┘ └──────────┘ └──────────┘ └───────┘ └────────┘ │
+│                                                                  │
+├──────────────────────────────────────────────────────────────────┤
+│                     DATA LAYER                                   │
+│                                                                  │
+│   ┌──────────────────┐  ┌──────────────────────────────────┐    │
+│   │  SQLite (better-  │  │  Electron Store (settings,       │    │
+│   │  sqlite3)         │  │  API keys, preferences)          │    │
+│   └──────────────────┘  └──────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Core Engines
+
+| Engine | Responsibility |
+|---|---|
+| **Debate Engine** | Orchestrates turn-taking, enforces format-specific phase sequences (opening, cross-examination, rebuttal, closing), manages timers and debate state |
+| **Model Router** | Resolves which provider and endpoint to call for each debater; handles streaming, retries, and extended thinking |
+| **Persona Manager** | Loads built-in and custom persona definitions; injects persona context into prompts |
+| **Evidence Verifier** | Scores source credibility, validates citations, flags unsupported claims |
+| **Fallacy Detector** | Pattern-matches 14+ logical fallacies in real time and surfaces them in the UI |
+| **ELO System** | Calculates rating changes after each debate; maintains a persistent leaderboard |
+| **Momentum Tracker** | Computes per-turn momentum scores to visualize which debater is gaining ground |
+| **UPP Engine** | Generates and parses Universal Persona Prompts for cross-model persona portability |
+
+---
+
+## Debate Formats
+
+| Format | Turns | Structure |
+|---|---|---|
+| **Oxford Union** | 10 | Formal motion debate with opening statements, argument rounds, rebuttals, and closing statements. Includes audience polling. |
+| **Lincoln-Douglas** | 8 | One-on-one values debate with constructive cases, cross-examination, and rebuttals. |
+| **Parliamentary** | 8 | Government vs. Opposition with points of information, member speeches, and whip summaries. |
+
+Each format defines its own turn sequence with labeled phases, ensuring debaters follow the structure appropriate to the format rather than free-form back-and-forth.
+
+---
+
+## Persona System
+
+DebateForge ships with **8 built-in personas** covering a range of rhetorical styles, and supports unlimited custom personas.
+
+### Built-in Personas
+
+Personas are model-agnostic -- the same persona works whether assigned to Claude, GPT-4o, Gemini, or a local model. Each persona defines:
+
+- **Background and expertise** -- who the debater is
+- **Rhetorical style** -- how they argue (Socratic, data-driven, passionate, etc.)
+- **Ideological leanings** -- what assumptions shape their worldview
+- **Argumentation preferences** -- evidence weight, emotional appeals, concession willingness
+- **Debate behavior** -- opening, rebuttal, and closing strategies
+
+### Custom Personas
+
+Create new personas through the **Persona Editor** in the application. Define every aspect of a debater's identity and argumentation approach.
+
+### Universal Persona Prompt (UPP)
+
+Export any persona's accumulated context as a portable JSON file that can be imported into any other model. The UPP is written in plain natural language so that even small local models can interpret it.
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| **Desktop Runtime** | Electron | 33.4 |
+| **UI Framework** | React | 19 |
+| **Language** | TypeScript | 5.7 |
+| **Build Tool** | Vite | 6 |
+| **Styling** | Tailwind CSS | 3.4 |
+| **State Management** | Zustand | 5 |
+| **Database** | SQLite via better-sqlite3 | 11.7 |
+| **Icons** | Lucide React | -- |
+| **Routing** | React Router | 7.1 |
+| **Testing** | Vitest | 2.1 |
+| **Linting** | ESLint | 9 |
+| **Packaging** | electron-builder | 25.1 |
+| **AI SDKs** | @anthropic-ai/sdk, openai, @google/generative-ai | -- |
+
+---
+
+## Testing
+
+The project includes **161 tests across 13 test files** covering all core engines and utilities:
+
+```bash
+# Run the full test suite
+npm test
+
+# Tests cover:
+# - Debate engine turn orchestration
+# - Format-specific phase sequencing
+# - ELO rating calculations
+# - Evidence verification and credibility scoring
+# - Fallacy detection patterns
+# - Persona management and loading
+# - Momentum tracking
+# - Citation parsing
+# - Prompt construction
+# - Scoring logic
+# - UPP generation and parsing
+# - Ollama think tag handling
+```
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) before submitting a PR.
+Contributions are welcome. Here is how to get started:
 
-Key areas where help is needed:
+1. **Fork** the repository and create a feature branch.
+2. **Install** dependencies with `npm install`.
+3. **Run** the development server with `npm run dev`.
+4. **Write tests** for any new functionality.
+5. **Ensure** all tests pass with `npm test` and linting passes with `npm run lint`.
+6. **Submit** a pull request with a clear description of the change.
+
+### Areas Where Contributions Are Especially Valuable
+
 - Additional debate format templates
-- Pre-built persona library expansion
-- Local model performance optimization
-- Accessibility improvements
-- Internationalization (i18n)
+- Expanding the built-in persona library
+- Performance optimization for local model integration
+- Accessibility improvements (screen readers, keyboard navigation)
+- Internationalization -- expanding beyond the current 12 languages
+- New fallacy detection patterns
+- UI/UX improvements and bug fixes
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for the full text.
 
 ---
 
 <p align="center">
-  <strong>DebateForge</strong> — Because the best way to find the truth is to argue about it.
+  <strong>DebateForge</strong> -- Because the best way to find the truth is to argue about it.
 </p>

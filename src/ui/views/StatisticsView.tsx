@@ -16,11 +16,15 @@ import {
   FileText,
   Percent,
   RefreshCw,
+  Flame,
+  Cloud,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Button } from '../components/Button';
+import { ArgumentHeatmap } from '../components/ArgumentHeatmap';
+import { DebateWordCloud } from '../components/DebateWordCloud';
 import type { Debate, DebateStatus } from '../../types';
 
 /* ─── Helpers ──────────────────────────────────────────────────────────────── */
@@ -663,6 +667,35 @@ const StatisticsView: React.FC = () => {
               </div>
             </div>
           )}
+        </Card>
+      </section>
+
+      {/* ── 8. Activity Heatmap ── */}
+      <section className="mb-10">
+        <Card>
+          <div className="mb-5 flex items-center gap-2">
+            <Flame className="h-5 w-5 text-orange-500" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Activity Heatmap (Last 12 Weeks)
+            </h2>
+          </div>
+          <ArgumentHeatmap debates={debates} />
+        </Card>
+      </section>
+
+      {/* ── 9. Word Cloud ── */}
+      <section className="mb-10">
+        <Card>
+          <div className="mb-5 flex items-center gap-2">
+            <Cloud className="h-5 w-5 text-sky-500" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Debate Word Cloud
+            </h2>
+          </div>
+          <DebateWordCloud
+            text={debates.map((d) => d.turns?.map((t) => t.content).join(' ') ?? '').join(' ')}
+            maxWords={40}
+          />
         </Card>
       </section>
     </div>

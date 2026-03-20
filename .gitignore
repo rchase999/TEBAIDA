@@ -3,8 +3,10 @@ node_modules/
 
 # Build output
 dist/
+release/
+out/
 
-# Environment variables
+# Environment
 .env
 .env.local
 .env.*.local
@@ -14,11 +16,24 @@ dist/
 .idea/
 *.swp
 *.swo
-
-# OS files
+*~
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
 npm-debug.log*
+
+# Testing
+coverage/
+
+# Electron
+*.asar
+
+# OS
+desktop.ini
+ehthumbs.db
+
+# Temp
+*.tmp
+*.bak
