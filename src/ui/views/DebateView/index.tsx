@@ -35,6 +35,10 @@ import { ExportHTMLButton } from '../../components/ExportHTML';
 import { WordCountBadge, DebateWordStats } from '../../components/WordCount';
 import { DebateNotes } from '../../components/DebateNotes';
 import { DebateReplay } from '../../components/DebateReplay';
+import { DebateTimeline } from '../../components/DebateTimeline';
+import { DebateSummaryGenerator } from '../../components/DebateSummaryGenerator';
+import { DebateShareCard } from '../../components/DebateShareCard';
+import { ConfettiEffect } from '../../components/ConfettiEffect';
 import type { DebateScore } from '../../../types';
 import type { DebateTurn, DebaterConfig, DetectedFallacy, Citation, Debate, DebatePhase, UserComment, OpinionValue, MomentumPoint } from '../../../types';
 
@@ -685,6 +689,29 @@ const DebateView: React.FC = () => {
     setCurrentDebate(rematch);
   }, [currentDebate, setCurrentDebate]);
 
+  /* ── Feature 7b: Rematch (same config, fresh turns) ── */
+  const handleRematchSameConfig = useCallback(() => {
+    if (!currentDebate) return;
+    const rematch = {
+      ...currentDebate,
+      id: crypto.randomUUID?.() ?? `${Date.now()}-rematch-same`,
+      turns: [],
+      status: 'in-progress' as const,
+      currentRound: 1,
+      currentDebaterIndex: 0,
+      currentPhase: currentDebate.format.turnSequence?.[0]?.phase ?? currentDebate.currentPhase,
+      scores: undefined,
+      userPostOpinion: undefined,
+      momentum: [],
+      comments: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      startedAt: undefined,
+      completedAt: undefined,
+    };
+    setCurrentDebate(rematch);
+  }, [currentDebate, setCurrentDebate]);
+
   /* ── Feature 8: Turn Timer ── */
   const [turnElapsed, setTurnElapsed] = useState(0);
   useEffect(() => {
@@ -713,6 +740,9 @@ const DebateView: React.FC = () => {
   const [replayVisibleTurns, setReplayVisibleTurns] = useState<number | null>(null);
   const isReplayMode = replayVisibleTurns !== null;
 
+  /* ── Feature 14: Confetti on debate completion ── */
+  const [showConfetti, setShowConfetti] = useState(false);
+
   /* ── Feature 13: Debate Bookmarks ── */
   const { bookmarks, isBookmarked, toggleBookmark, removeBookmark, updateNote } = useBookmarks();
 
@@ -730,6 +760,15 @@ const DebateView: React.FC = () => {
     }
     prevTurnCountRef.current = turnCount;
   }, [currentDebate?.turns?.length, currentDebate?.status, soundEnabled]);
+
+  // Trigger confetti when debate completes
+  const prevStatusRef = useRef(currentDebate?.status);
+  useEffect(() => {
+    if (prevStatusRef.current !== 'completed' && currentDebate?.status === 'completed') {
+      setShowConfetti(true);
+    }
+    prevStatusRef.current = currentDebate?.status;
+  }, [currentDebate?.status]);
 
   // Calculate momentum data from current turns
   const momentumData: MomentumPoint[] = useMemo(() => {
@@ -1227,6 +1266,9 @@ const DebateView: React.FC = () => {
 
   return (
     <div className="flex h-full">
+      {/* Confetti on debate completion */}
+      <ConfettiEffect trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
+
       {/* Transcript pane */}
       <div className={clsx('flex flex-1 flex-col', showEvidencePanel ? 'w-[60%]' : 'w-full')}>
         {/* Top bar */}
@@ -1717,6 +1759,13 @@ const DebateView: React.FC = () => {
             </div>
           )}
 
+          {/* Debate Summary — generated after completion */}
+          {isCompleted && currentDebate && (
+            <div className="mx-auto max-w-3xl animate-fade-in">
+              <DebateSummaryGenerator debate={currentDebate} />
+            </div>
+          )}
+
           {/* Opinion Shift Result — shown after post-debate vote */}
           {isCompleted && currentDebate?.userPreOpinion && (postOpinion || currentDebate?.userPostOpinion) && !showPostPoll && (
             <div className="mx-auto max-w-2xl animate-fade-in">
@@ -1879,6 +1928,11 @@ const DebateView: React.FC = () => {
                 {currentDebate && <ExportHTMLButton debate={currentDebate} />}
                 <Tooltip content="Rematch with swapped sides">
                   <Button variant="outline" size="sm" onClick={handleQuickRematch} icon={<Repeat className="h-4 w-4" />}>
+                    Swap Rematch
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Rematch with same topic, models and personas">
+                  <Button variant="outline" size="sm" onClick={handleRematchSameConfig} icon={<RotateCcw className="h-4 w-4" />}>
                     Rematch
                   </Button>
                 </Tooltip>
@@ -1899,19 +1953,39 @@ const DebateView: React.FC = () => {
           </div>
         )}
 
-        {/* Word Stats + Notes (after completed bar) */}
+        {/* Word Stats + Notes + Share Card (after completed bar) */}
         {isCompleted && currentDebate && (
           <div className="space-y-3 border-t border-gray-200 px-5 py-4 dark:border-surface-dark-3">
             <DebateWordStats turns={turns} debaters={currentDebate.debaters} />
             <DebateNotes debateId={currentDebate.id} />
+            <DebateShareCard debate={currentDebate} />
           </div>
         )}
       </div>
 
-      {/* Evidence Panel */}
+      {/* Evidence Panel + Sidebar */}
       {showEvidencePanel && (
-        <div className="w-[40%] border-l border-gray-200 dark:border-surface-dark-3">
+        <div className="w-[40%] border-l border-gray-200 dark:border-surface-dark-3 flex flex-col overflow-auto">
           <EvidencePanel />
+
+          {/* Debate Timeline */}
+          {currentDebate && turns.length > 0 && (
+            <div className="border-t border-gray-200 px-4 py-3 dark:border-surface-dark-3">
+              <details open>
+                <summary className="mb-2 cursor-pointer text-sm font-semibold text-gray-700 dark:text-gray-300 select-none">
+                  Debate Timeline
+                </summary>
+                <DebateTimeline
+                  debate={currentDebate}
+                  activeTurnIndex={currentStep > 0 ? currentStep - 1 : undefined}
+                  onTurnClick={(turnIndex) => {
+                    const el = scrollRef.current?.children?.[turnIndex];
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                />
+              </details>
+            </div>
+          )}
         </div>
       )}
     </div>
