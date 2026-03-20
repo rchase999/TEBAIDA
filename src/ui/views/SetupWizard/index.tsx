@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ChevronRight, ChevronLeft, Play, Lightbulb,
-  RefreshCw, Zap, Info,
+  RefreshCw, Zap, Info, Brain,
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { Button } from '../../components/Button';
@@ -13,6 +13,7 @@ import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { DebateQuickTemplates } from '../../components/DebateQuickTemplates';
 import type { QuickTemplate } from '../../components/DebateQuickTemplates';
+import { TopicGenerator } from '../../components/TopicGenerator';
 import { Stepper } from '../../components/Stepper';
 import { DEBATE_FORMATS, OXFORD_UNION_FORMAT } from '../../../core/debate_engine/formats';
 import type { DebaterConfig, ModelConfig, Persona, OpinionValue, DebateFormat, DebateFormatConfig } from '../../../types';
@@ -383,6 +384,15 @@ const SetupWizard: React.FC = () => {
             setStep(1);
           }}
         />
+      </div>
+
+      {/* Advanced Topic Generator */}
+      <div>
+        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+          <Brain className="h-4 w-4" />
+          <span>Topic Explorer</span>
+        </div>
+        <TopicGenerator onSelect={(topic) => setSetupTopic(topic)} />
       </div>
     </div>
   );
