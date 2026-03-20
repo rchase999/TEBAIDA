@@ -39,7 +39,7 @@ declare global {
 // ---------------------------------------------------------------------------
 // View type
 // ---------------------------------------------------------------------------
-export type AppView = 'home' | 'debate' | 'setup' | 'personas' | 'settings' | 'tournament' | 'leaderboard' | 'statistics';
+export type AppView = 'home' | 'debate' | 'setup' | 'personas' | 'settings' | 'tournament' | 'leaderboard' | 'statistics' | 'profile' | 'about' | 'help' | 'changelog' | 'landing';
 
 // ---------------------------------------------------------------------------
 // Theme type
@@ -257,11 +257,26 @@ export interface DebateForgeState {
   getHeadToHead: (modelA: string, modelB: string) => HeadToHeadRecord | null;
   resetLeaderboard: () => void;
 
+  // ── User profile ──
+  userProfile: UserProfile;
+  updateUserProfile: (partial: Partial<UserProfile>) => void;
+
   // ── UI actions ──
   setTheme: (mode: ThemeMode) => void;
   toggleSidebar: () => void;
   setCurrentView: (view: AppView) => void;
   navigateTo: (view: AppView) => void;
+}
+
+// ---------------------------------------------------------------------------
+// User profile type
+// ---------------------------------------------------------------------------
+export interface UserProfile {
+  displayName: string;
+  username: string;
+  bio: string;
+  avatarColor: string;
+  createdAt: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -427,6 +442,37 @@ function persistSettings(settings: AppSettings): void {
 }
 
 // ---------------------------------------------------------------------------
+// User profile persistence helpers (localStorage)
+// ---------------------------------------------------------------------------
+const PROFILE_KEY = 'debateforge-profile';
+
+const DEFAULT_PROFILE: UserProfile = {
+  displayName: 'Debater',
+  username: 'debater',
+  bio: '',
+  avatarColor: '#4c6ef5',
+  createdAt: new Date().toISOString(),
+};
+
+function loadStoredProfile(): UserProfile {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (raw) return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+  } catch {
+    // corrupted data
+  }
+  return { ...DEFAULT_PROFILE, createdAt: new Date().toISOString() };
+}
+
+function persistProfile(profile: UserProfile): void {
+  try {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  } catch {
+    // storage full or unavailable
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Debates persistence helpers (localStorage)
 // ---------------------------------------------------------------------------
 const DEBATES_KEY = 'debateforge-debates';
@@ -465,7 +511,11 @@ export const useStore = create<DebateForgeState>((set, get) => {
     // ── App state ──────────────────────────────────────────────────────────
     theme: initialTheme,
     sidebarOpen: true,
-    currentView: 'home',
+    currentView: (() => {
+      try {
+        return localStorage.getItem('debateforge-has-visited') ? 'home' : 'landing';
+      } catch { return 'home'; }
+    })() as AppView,
 
     // ── API keys ───────────────────────────────────────────────────────────
     apiKeys: {},
@@ -811,6 +861,17 @@ export const useStore = create<DebateForgeState>((set, get) => {
       persistModelRatings({});
       persistHeadToHead({});
       set({ modelRatings: {}, headToHeadRecords: {} });
+    },
+
+    // ── User profile ──────────────────────────────────────────────────────
+    userProfile: loadStoredProfile(),
+
+    updateUserProfile: (partial) => {
+      set((state) => {
+        const updated = { ...state.userProfile, ...partial };
+        persistProfile(updated);
+        return { userProfile: updated };
+      });
     },
 
     // ── UI actions ─────────────────────────────────────────────────────────

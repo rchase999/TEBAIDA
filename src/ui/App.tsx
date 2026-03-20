@@ -21,6 +21,14 @@ const WhatsNewModal = lazy(() => import('./components/WhatsNewModal'));
 const FeedbackWidget = lazy(() => import('./components/FeedbackWidget'));
 const BackToTop = lazy(() => import('./components/BackToTop'));
 
+// Lazy-load new views
+const LandingView = lazy(() => import('./views/LandingView'));
+const ProfileView = lazy(() => import('./views/ProfileView'));
+const AboutView = lazy(() => import('./views/AboutView'));
+const HelpView = lazy(() => import('./views/HelpView'));
+const ChangelogView = lazy(() => import('./views/ChangelogView'));
+const NotFoundView = lazy(() => import('./views/NotFoundView'));
+
 function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
   if (sidebarView === 'new-debate') return 'setup';
   return sidebarView;
@@ -192,8 +200,26 @@ export default function App() {
 
   const completedCount = debates.filter((d) => d.status === 'completed').length;
 
+  const handleLandingGetStarted = useCallback(() => {
+    try { localStorage.setItem('debateforge-has-visited', 'true'); } catch {}
+    setCurrentView('settings');
+  }, [setCurrentView]);
+
+  const handleLandingExplore = useCallback(() => {
+    try { localStorage.setItem('debateforge-has-visited', 'true'); } catch {}
+    setCurrentView('home');
+  }, [setCurrentView]);
+
+  const isLanding = currentView === 'landing';
+
   const renderView = () => {
     switch (currentView) {
+      case 'landing':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <LandingView onGetStarted={handleLandingGetStarted} onExploreFeatures={handleLandingExplore} />
+          </Suspense>
+        );
       case 'home':
         return <HomeView />;
       case 'setup':
@@ -210,6 +236,30 @@ export default function App() {
         return <LeaderboardView />;
       case 'statistics':
         return <StatisticsView />;
+      case 'profile':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <ProfileView />
+          </Suspense>
+        );
+      case 'about':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <AboutView />
+          </Suspense>
+        );
+      case 'help':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <HelpView />
+          </Suspense>
+        );
+      case 'changelog':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <ChangelogView />
+          </Suspense>
+        );
       default:
         return <HomeView />;
     }
@@ -218,33 +268,43 @@ export default function App() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50 dark:bg-surface-dark-0" data-theme={effective}>
       {/* Scroll progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-[60] h-0.5 bg-transparent">
-        <div
-          id="scroll-progress"
-          className="h-full bg-gradient-to-r from-forge-500 to-forge-400 transition-all duration-150"
-          style={{ width: '0%' }}
-        />
-      </div>
+      {!isLanding && (
+        <div className="fixed top-0 left-0 right-0 z-[60] h-0.5 bg-transparent">
+          <div
+            id="scroll-progress"
+            className="h-full bg-gradient-to-r from-forge-500 to-forge-400 transition-all duration-150"
+            style={{ width: '0%' }}
+          />
+        </div>
+      )}
 
-      <Sidebar
-        currentView={storeViewToSidebarView(currentView)}
-        onViewChange={handleSidebarViewChange}
-        theme={theme}
-        onThemeToggle={handleThemeToggle}
-        onSearchClick={handleSearchClick}
-        debateCount={completedCount}
-      />
-
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header
-          currentDebateTopic={currentDebate?.topic}
-          currentView={currentView}
+      {!isLanding && (
+        <Sidebar
+          currentView={storeViewToSidebarView(currentView)}
+          onViewChange={handleSidebarViewChange}
           theme={theme}
           onThemeToggle={handleThemeToggle}
-          onSettingsClick={handleSettingsClick}
           onSearchClick={handleSearchClick}
-          onShortcutsClick={handleShortcutsClick}
+          debateCount={completedCount}
         />
+      )}
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {!isLanding && (
+          <Header
+            currentDebateTopic={currentDebate?.topic}
+            currentView={currentView}
+            theme={theme}
+            onThemeToggle={handleThemeToggle}
+            onSettingsClick={handleSettingsClick}
+            onSearchClick={handleSearchClick}
+            onShortcutsClick={handleShortcutsClick}
+            onProfileClick={() => setCurrentView('profile')}
+            onAboutClick={() => setCurrentView('about')}
+            onHelpClick={() => setCurrentView('help')}
+            onChangelogClick={() => setCurrentView('changelog')}
+          />
+        )}
         <main
           ref={mainRef}
           id="main-content"

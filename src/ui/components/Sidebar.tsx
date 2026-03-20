@@ -3,6 +3,10 @@ import clsx from 'clsx';
 import {
   LayoutDashboard,
   Swords,
+  User,
+  HelpCircle,
+  Info,
+  FileText,
   Users,
   Trophy,
   Settings,
@@ -18,7 +22,7 @@ import {
   Monitor,
 } from 'lucide-react';
 
-export type AppView = 'home' | 'new-debate' | 'personas' | 'tournament' | 'leaderboard' | 'statistics' | 'settings';
+export type AppView = 'home' | 'new-debate' | 'personas' | 'tournament' | 'leaderboard' | 'statistics' | 'settings' | 'profile' | 'about' | 'help' | 'changelog';
 
 export interface SidebarProps {
   currentView: AppView;
@@ -62,6 +66,12 @@ const navSections: NavSection[] = [
     items: [
       { id: 'leaderboard', label: 'Leaderboard', icon: BarChart3 },
       { id: 'statistics', label: 'Statistics', icon: PieChart },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [
+      { id: 'profile', label: 'My Profile', icon: User },
     ],
   },
 ];
@@ -219,6 +229,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Bottom section */}
       <div className="border-t border-gray-200/60 px-2 py-2 dark:border-surface-dark-3/60">
+        {/* Help & About links */}
+        {!collapsed && (
+          <div className="flex items-center gap-1 px-1 mb-1">
+            <button onClick={() => onViewChange('help')} className="flex-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
+              Help
+            </button>
+            <button onClick={() => onViewChange('about')} className="flex-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
+              About
+            </button>
+            <button onClick={() => onViewChange('changelog')} className="flex-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
+              Changelog
+            </button>
+          </div>
+        )}
+
         {/* Settings */}
         <button
           onClick={() => onViewChange('settings')}

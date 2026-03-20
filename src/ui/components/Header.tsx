@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import {
   Settings, Sun, Moon, Swords, Search, Bell,
   Command, ChevronRight, Monitor, Keyboard,
-  HelpCircle, ExternalLink, Bug,
+  HelpCircle, ExternalLink, Bug, User, Info, FileText,
 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { useStore } from '../store';
@@ -16,6 +16,10 @@ export interface HeaderProps {
   onSettingsClick?: () => void;
   onSearchClick?: () => void;
   onShortcutsClick?: () => void;
+  onProfileClick?: () => void;
+  onAboutClick?: () => void;
+  onHelpClick?: () => void;
+  onChangelogClick?: () => void;
   className?: string;
 }
 
@@ -38,6 +42,10 @@ export const Header: React.FC<HeaderProps> = ({
   onSettingsClick,
   onSearchClick,
   onShortcutsClick,
+  onProfileClick,
+  onAboutClick,
+  onHelpClick,
+  onChangelogClick,
   className,
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -161,6 +169,14 @@ export const Header: React.FC<HeaderProps> = ({
                   <p className="text-xs text-gray-500 dark:text-gray-400">v1.0.0</p>
                 </div>
                 <div className="py-1">
+                  {onProfileClick && (
+                    <button
+                      onClick={() => { setShowProfileMenu(false); onProfileClick(); }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-surface-dark-2"
+                    >
+                      <User className="h-4 w-4" /> My Profile
+                    </button>
+                  )}
                   {onSettingsClick && (
                     <button
                       onClick={() => { setShowProfileMenu(false); onSettingsClick(); }}
@@ -175,6 +191,31 @@ export const Header: React.FC<HeaderProps> = ({
                       className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-surface-dark-2"
                     >
                       <Keyboard className="h-4 w-4" /> Keyboard Shortcuts
+                    </button>
+                  )}
+                  <div className="my-1 h-px bg-gray-100 dark:bg-surface-dark-3" />
+                  {onChangelogClick && (
+                    <button
+                      onClick={() => { setShowProfileMenu(false); onChangelogClick(); }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-surface-dark-2"
+                    >
+                      <FileText className="h-4 w-4" /> What's New
+                    </button>
+                  )}
+                  {onHelpClick && (
+                    <button
+                      onClick={() => { setShowProfileMenu(false); onHelpClick(); }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-surface-dark-2"
+                    >
+                      <HelpCircle className="h-4 w-4" /> Help & Docs
+                    </button>
+                  )}
+                  {onAboutClick && (
+                    <button
+                      onClick={() => { setShowProfileMenu(false); onAboutClick(); }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-surface-dark-2"
+                    >
+                      <Info className="h-4 w-4" /> About DebateForge
                     </button>
                   )}
                   <button
