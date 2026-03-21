@@ -37,6 +37,21 @@ export function getDb(): DatabaseType {
 // Schema
 // ──────────────────────────────────────────────
 
+/**
+ * Safely add a column to a table if it doesn't already exist.
+ */
+function addColumnIfMissing(
+  database: DatabaseType,
+  table: string,
+  column: string,
+  definition: string,
+): void {
+  const cols = database.pragma(`table_info(${table})`) as { name: string }[];
+  if (!cols.some((c) => c.name === column)) {
+    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
 function createTables(database: DatabaseType): void {
   database.exec(`
     -- ──────────────────────────────────────────────
@@ -134,9 +149,6 @@ function createTables(database: DatabaseType): void {
     CREATE INDEX IF NOT EXISTS idx_debates_created_at
       ON debates(created_at);
 
-    CREATE INDEX IF NOT EXISTS idx_debates_deleted_at
-      ON debates(deleted_at);
-
     CREATE INDEX IF NOT EXISTS idx_debate_notes_debate_id
       ON debate_notes(debate_id);
 
@@ -148,6 +160,20 @@ function createTables(database: DatabaseType): void {
 
     CREATE INDEX IF NOT EXISTS idx_tags_name
       ON tags(name);
+  `);
+
+  // ── Schema migrations for existing databases ──
+  // Add columns that may not exist on older databases
+  addColumnIfMissing(database, 'debates', 'tags', "TEXT NOT NULL DEFAULT '[]'");
+  addColumnIfMissing(database, 'debates', 'is_favorite', 'INTEGER NOT NULL DEFAULT 0');
+  addColumnIfMissing(database, 'debates', 'deleted_at', 'TEXT DEFAULT NULL');
+  addColumnIfMissing(database, 'debate_turns', 'fallacies', "TEXT NOT NULL DEFAULT '[]'");
+  addColumnIfMissing(database, 'debate_turns', 'word_count', 'INTEGER NOT NULL DEFAULT 0');
+
+  // Create index on deleted_at after ensuring column exists
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_debates_deleted_at
+      ON debates(deleted_at);
   `);
 }
 

@@ -32,6 +32,8 @@ const VIEW_LABELS: Record<string, string> = {
   tournament: 'Tournament',
   leaderboard: 'Leaderboard',
   statistics: 'Statistics',
+  history: 'Debate History',
+  'account-security': 'Account Security',
 };
 
 export const Header: React.FC<HeaderProps> = ({

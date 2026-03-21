@@ -24,7 +24,7 @@ import {
   Library,
 } from 'lucide-react';
 
-export type AppView = 'home' | 'new-debate' | 'history' | 'personas' | 'tournament' | 'leaderboard' | 'statistics' | 'settings' | 'profile' | 'about' | 'help' | 'changelog';
+export type AppView = 'home' | 'new-debate' | 'history' | 'personas' | 'tournament' | 'leaderboard' | 'statistics' | 'settings' | 'profile' | 'about' | 'help' | 'changelog' | 'admin';
 
 export interface SidebarProps {
   currentView: AppView;
@@ -77,6 +77,12 @@ const navSections: NavSection[] = [
       { id: 'profile', label: 'My Profile', icon: User },
       { id: 'settings', label: 'Settings', icon: Settings },
       { id: 'help', label: 'Help & Docs', icon: HelpCircle },
+    ],
+  },
+  {
+    title: 'Admin',
+    items: [
+      { id: 'admin', label: 'Admin Console', icon: Library, badge: 'Admin', badgeColor: 'text-red-400 bg-red-400/10' },
     ],
   },
 ];

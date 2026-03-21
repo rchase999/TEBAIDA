@@ -43,6 +43,7 @@ const EmailVerificationView = lazy(() => import('./views/auth/EmailVerificationV
 const TwoFactorSetupView = lazy(() => import('./views/auth/TwoFactorSetupView'));
 const TwoFactorVerifyView = lazy(() => import('./views/auth/TwoFactorVerifyView'));
 const AccountSecurityView = lazy(() => import('./views/auth/AccountSecurityView'));
+const AdminView = lazy(() => import('./views/AdminView'));
 
 function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
   if (sidebarView === 'new-debate') return 'setup';
@@ -87,6 +88,19 @@ export default function App() {
   useEffect(() => {
     loadApiKeys();
   }, [loadApiKeys]);
+
+  // Listen for auth navigation events from auth views
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail === 'home' || detail === 'settings') {
+        try { localStorage.setItem('debateforge-has-visited', 'true'); } catch {}
+      }
+      setCurrentView(detail as any);
+    };
+    window.addEventListener('auth-navigate', handler);
+    return () => window.removeEventListener('auth-navigate', handler);
+  }, [setCurrentView]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -220,12 +234,12 @@ export default function App() {
 
   const handleLandingGetStarted = useCallback(() => {
     try { localStorage.setItem('debateforge-has-visited', 'true'); } catch {}
-    setCurrentView('settings');
+    setCurrentView('signup');
   }, [setCurrentView]);
 
   const handleLandingExplore = useCallback(() => {
     try { localStorage.setItem('debateforge-has-visited', 'true'); } catch {}
-    setCurrentView('home');
+    setCurrentView('signin');
   }, [setCurrentView]);
 
   const authViews = ['landing', 'signin', 'signup', 'forgot-password', 'verify-email', '2fa-setup', '2fa-verify'];
@@ -337,6 +351,12 @@ export default function App() {
         return (
           <Suspense fallback={<ViewLoader />}>
             <AccountSecurityView />
+          </Suspense>
+        );
+      case 'admin':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <AdminView />
           </Suspense>
         );
       default:
