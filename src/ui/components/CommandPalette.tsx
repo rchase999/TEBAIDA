@@ -539,7 +539,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                         <div className="flex shrink-0 items-center gap-0.5">
                           <kbd
                             className={clsx(
-                              'inline-flex h-5 min-w-[20px] items-center justify-center rounded px-1 text-[10px] font-medium',
+                              'inline-flex h-5 min-w-[20px] items-center justify-center rounded px-1 text-xs font-medium',
                               'border border-gray-200 bg-gray-50 text-gray-500',
                               'dark:border-surface-dark-4 dark:bg-surface-dark-3 dark:text-gray-400',
                             )}
@@ -548,7 +548,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           </kbd>
                           <kbd
                             className={clsx(
-                              'inline-flex h-5 min-w-[20px] items-center justify-center rounded px-1 text-[10px] font-medium',
+                              'inline-flex h-5 min-w-[20px] items-center justify-center rounded px-1 text-xs font-medium',
                               'border border-gray-200 bg-gray-50 text-gray-500',
                               'dark:border-surface-dark-4 dark:bg-surface-dark-3 dark:text-gray-400',
                             )}
@@ -585,7 +585,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 <kbd
                   className={clsx(
                     'inline-flex h-[18px] w-[18px] items-center justify-center rounded',
-                    'border border-gray-200 bg-white text-[10px]',
+                    'border border-gray-200 bg-white text-xs',
                     'dark:border-surface-dark-4 dark:bg-surface-dark-2',
                   )}
                 >
@@ -594,7 +594,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 <kbd
                   className={clsx(
                     'inline-flex h-[18px] w-[18px] items-center justify-center rounded',
-                    'border border-gray-200 bg-white text-[10px]',
+                    'border border-gray-200 bg-white text-xs',
                     'dark:border-surface-dark-4 dark:bg-surface-dark-2',
                   )}
                 >
@@ -609,7 +609,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               <kbd
                 className={clsx(
                   'inline-flex h-[18px] items-center justify-center rounded px-1',
-                  'border border-gray-200 bg-white text-[10px]',
+                  'border border-gray-200 bg-white text-xs',
                   'dark:border-surface-dark-4 dark:bg-surface-dark-2',
                 )}
               >
@@ -623,7 +623,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               <kbd
                 className={clsx(
                   'inline-flex h-[18px] items-center justify-center rounded px-1.5',
-                  'border border-gray-200 bg-white text-[9px] font-medium',
+                  'border border-gray-200 bg-white text-[11px] font-medium',
                   'dark:border-surface-dark-4 dark:bg-surface-dark-2',
                 )}
               >

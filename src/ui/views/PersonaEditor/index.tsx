@@ -569,7 +569,7 @@ const PersonaEditor: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-medium">{p.name || 'Unnamed'}</p>
                     {stats && stats.debateCount > 0 && (
-                      <span className="shrink-0 inline-flex items-center rounded-full bg-forge-100 px-1.5 py-0.5 text-[10px] font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-300">
+                      <span className="shrink-0 inline-flex items-center rounded-full bg-forge-100 px-1.5 py-0.5 text-xs font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-300">
                         {stats.debateCount}
                       </span>
                     )}
@@ -580,7 +580,7 @@ const PersonaEditor: React.FC = () => {
                       {p.expertise.slice(0, 3).map((exp) => (
                         <span
                           key={exp}
-                          className="inline-block rounded-full px-1.5 py-px text-[10px] font-medium leading-tight"
+                          className="inline-block rounded-full px-1.5 py-px text-xs font-medium leading-tight"
                           style={{
                             backgroundColor: (p.avatar_color || '#6366F1') + '18',
                             color: p.avatar_color || '#6366F1',
@@ -590,7 +590,7 @@ const PersonaEditor: React.FC = () => {
                         </span>
                       ))}
                       {p.expertise.length > 3 && (
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
                           +{p.expertise.length - 3}
                         </span>
                       )}

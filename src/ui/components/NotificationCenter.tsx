@@ -113,7 +113,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ debates,
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[11px] font-bold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -166,7 +166,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ debates,
                           {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-forge-500 shrink-0" />}
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{n.description}</p>
-                        <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                        <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                           {getRelativeTime(n.timestamp)}
                         </p>
                       </div>

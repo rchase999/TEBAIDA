@@ -101,7 +101,7 @@ const EntryBadge: React.FC<{ kind: EntryKind }> = ({ kind }) => {
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none shrink-0',
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold leading-none shrink-0',
         cfg.bg,
       )}
     >

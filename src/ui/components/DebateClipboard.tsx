@@ -105,7 +105,7 @@ export const DebateClipboard: React.FC<DebateClipboardProps> = ({ debate, classN
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             Best Quotes
           </h3>
-          <span className="text-[10px] text-gray-400 dark:text-gray-500">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             {allClips.length} clips
           </span>
         </div>
@@ -138,7 +138,7 @@ export const DebateClipboard: React.FC<DebateClipboardProps> = ({ debate, classN
                   &ldquo;{clip.excerpt}&rdquo;
                 </p>
                 <div className="mt-1.5 flex items-center justify-between">
-                  <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                     — {clip.debaterName} ({clip.phase})
                   </span>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -174,7 +174,7 @@ export const DebateClipboard: React.FC<DebateClipboardProps> = ({ debate, classN
           {allClips.length > 0 && (
             <button
               onClick={exportClips}
-              className="flex w-full items-center justify-center gap-1.5 py-1.5 text-[10px] font-medium text-gray-400 hover:text-forge-500 dark:text-gray-500 dark:hover:text-forge-400 transition-colors"
+              className="flex w-full items-center justify-center gap-1.5 py-1.5 text-xs font-medium text-gray-400 hover:text-forge-500 dark:text-gray-500 dark:hover:text-forge-400 transition-colors"
             >
               <Download className="h-3 w-3" /> Export quotes
             </button>

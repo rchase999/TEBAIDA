@@ -171,7 +171,7 @@ const DebateCard: React.FC<DebateCardProps> = ({ debate, selected, onToggle, onV
             <div
               key={d.id}
               className={clsx(
-                'flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white dark:border-surface-dark-1',
+                'flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white dark:border-surface-dark-1',
                 getAvatarColor(d.id),
               )}
               title={d.name}
@@ -269,7 +269,7 @@ const ListRow: React.FC<ListRowProps> = ({ debate, selected, onToggle, onView })
             <div
               key={d.id}
               className={clsx(
-                'flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white dark:border-surface-dark-1',
+                'flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white dark:border-surface-dark-1',
                 getAvatarColor(d.id),
               )}
               title={d.name}
@@ -439,7 +439,7 @@ const DebateTable: React.FC<TableViewProps> = ({
                       <div
                         key={db.id}
                         className={clsx(
-                          'flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold text-white dark:border-surface-dark-1',
+                          'flex h-6 w-6 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white dark:border-surface-dark-1',
                           getAvatarColor(db.id),
                         )}
                         title={db.name}
@@ -706,7 +706,7 @@ const DebateHistoryView: React.FC = () => {
           >
             Filters
             {activeFilters.length > 0 && (
-              <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-forge-500 text-[10px] font-bold text-white">
+              <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-forge-500 text-xs font-bold text-white">
                 {activeFilters.length}
               </span>
             )}

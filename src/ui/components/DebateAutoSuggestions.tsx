@@ -146,7 +146,7 @@ export const DebateAutoSuggestions: React.FC<DebateAutoSuggestionsProps> = ({
             <Icon className={clsx('h-4 w-4 shrink-0', s.color)} />
             <div className="min-w-0 flex-1">
               <p className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors line-clamp-1">{s.topic}</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">{s.reason}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{s.reason}</p>
             </div>
             <ArrowRight className="h-3.5 w-3.5 shrink-0 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>

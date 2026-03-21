@@ -155,11 +155,11 @@ export const ArgumentMapper: React.FC<ArgumentMapperProps> = ({ debate, classNam
         </div>
         <div>
           <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Argument Map</h3>
-          <p className="text-[11px] text-gray-400 dark:text-gray-500">{nodes.length} nodes</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{nodes.length} nodes</p>
         </div>
 
         {/* Legend */}
-        <div className="ml-auto flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-500">
+        <div className="ml-auto flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
           <span className="flex items-center gap-1">
             <span className="w-5 h-0.5 bg-gray-400 dark:bg-gray-500 rounded-full inline-block" /> Direct rebuttal
           </span>
@@ -239,20 +239,20 @@ export const ArgumentMapper: React.FC<ArgumentMapperProps> = ({ debate, classNam
                       </span>
                       <span
                         className={clsx(
-                          'px-1.5 py-0.5 rounded-full text-[10px] font-medium uppercase',
+                          'px-1.5 py-0.5 rounded-full text-xs font-medium uppercase',
                           styles.badge,
                           styles.badgeText,
                         )}
                       >
                         {node.role}
                       </span>
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
                         Turn {node.index + 1} &middot; {node.phase}
                       </span>
 
                       {/* Fallacy indicator */}
                       {node.hasFallacies && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-amber-600 dark:text-amber-400">
+                        <span className="flex items-center gap-0.5 text-xs text-amber-600 dark:text-amber-400">
                           <AlertTriangle className="w-3 h-3" />
                           {node.fallacyCount}
                         </span>
@@ -283,11 +283,11 @@ export const ArgumentMapper: React.FC<ArgumentMapperProps> = ({ debate, classNam
                           >
                             <AlertTriangle className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
                             <div>
-                              <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
                                 {f.name}
                               </span>
                               <span className={clsx(
-                                'ml-1.5 text-[9px] px-1 py-0.5 rounded-full font-medium uppercase',
+                                'ml-1.5 text-xs px-2 py-0.5 rounded-full font-medium uppercase',
                                 f.severity === 'high'
                                   ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
                                   : f.severity === 'medium'
@@ -296,7 +296,7 @@ export const ArgumentMapper: React.FC<ArgumentMapperProps> = ({ debate, classNam
                               )}>
                                 {f.severity}
                               </span>
-                              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                 {f.description}
                               </p>
                             </div>
@@ -307,7 +307,7 @@ export const ArgumentMapper: React.FC<ArgumentMapperProps> = ({ debate, classNam
 
                     {/* Expanded citation list */}
                     {isExpanded && node.turn.citations.length > 0 && (
-                      <div className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">
+                      <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">
                         <span className="font-medium">Citations:</span>{' '}
                         {node.turn.citations.map((c) => c.title || c.url).join(', ')}
                       </div>

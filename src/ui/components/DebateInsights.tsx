@@ -157,7 +157,7 @@ export const DebateInsights: React.FC<DebateInsightsProps> = ({ debates, classNa
               <Icon className={clsx('h-4 w-4', insight.color)} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 truncate">{insight.title}</p>
+              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 truncate">{insight.title}</p>
               <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{insight.value}</p>
             </div>
           </div>

@@ -11,7 +11,7 @@ export interface AvatarProps {
 }
 
 const sizeStyles: Record<NonNullable<AvatarProps['size']>, string> = {
-  xs: 'h-6 w-6 text-[10px]',
+  xs: 'h-6 w-6 text-xs',
   sm: 'h-8 w-8 text-xs',
   md: 'h-10 w-10 text-sm',
   lg: 'h-14 w-14 text-lg',

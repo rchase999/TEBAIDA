@@ -72,7 +72,7 @@ const ShortcutRow: React.FC<{
         {parts.map((part, i) => (
           <React.Fragment key={i}>
             {i > 0 && (
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">+</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">+</span>
             )}
             <Keycap label={part} />
           </React.Fragment>

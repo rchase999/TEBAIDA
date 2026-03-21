@@ -142,10 +142,10 @@ export const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
                 )}>
                   {item.label}
                 </p>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500">{item.description}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{item.description}</p>
               </div>
               {!item.completed && (
-                <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-medium text-forge-600 dark:text-forge-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="shrink-0 flex items-center gap-0.5 text-xs font-medium text-forge-600 dark:text-forge-400 opacity-0 group-hover:opacity-100 transition-opacity">
                   {item.action} <ChevronRight className="h-3 w-3" />
                 </span>
               )}

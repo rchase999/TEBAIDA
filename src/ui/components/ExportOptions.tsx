@@ -270,7 +270,7 @@ export const ExportOptions: React.FC<ExportOptionsProps> = ({ debate, className 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{opt.label}</span>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500">.{opt.extension}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">.{opt.extension}</span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{opt.description}</p>
                 </div>

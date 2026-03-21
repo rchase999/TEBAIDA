@@ -497,7 +497,7 @@ const SetupWizard: React.FC = () => {
                       {debater.persona.expertise.slice(0, 4).map((tag) => (
                         <span
                           key={tag}
-                          className="inline-block rounded-full bg-forge-100 px-2 py-0.5 text-[10px] font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-300"
+                          className="inline-block rounded-full bg-forge-100 px-2 py-0.5 text-xs font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-300"
                         >
                           {tag}
                         </span>

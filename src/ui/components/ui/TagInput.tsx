@@ -197,7 +197,7 @@ export const TagInput: React.FC<TagInputProps> = ({
                   removeTag(tag);
                 }}
                 className={clsx(
-                  'ml-0.5 rounded-full p-0.5 transition-colors',
+                  'ml-0.5 rounded-full p-1 transition-colors',
                   'hover:bg-black/10 dark:hover:bg-white/10',
                   'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-current',
                 )}

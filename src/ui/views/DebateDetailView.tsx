@@ -838,7 +838,7 @@ const DebateDetailView: React.FC<{ debateId?: string }> = ({ debateId }) => {
                     <div key={d.id} className="flex items-center gap-2">
                       <div
                         className={clsx(
-                          'flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white',
+                          'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white',
                           getAvatarColor(d.id),
                         )}
                       >
@@ -848,7 +848,7 @@ const DebateDetailView: React.FC<{ debateId?: string }> = ({ debateId }) => {
                         <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
                           {d.name}
                         </p>
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                        <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
                           {d.model.displayName} &middot; {d.persona.name}
                         </p>
                       </div>

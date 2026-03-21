@@ -246,7 +246,7 @@ const ComparisonBar: React.FC<ComparisonBarProps> = ({
 
   return (
     <div>
-      <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 mb-1">
+      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
         <span>
           {leftLabel}: <span className="font-medium text-gray-700 dark:text-gray-200">{leftValue}{unit}</span>
         </span>
@@ -350,7 +350,7 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
               leftValue={a.wordCount}
               rightValue={b.wordCount}
             />
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
               {a.wordCount > b.wordCount
                 ? `${a.name} spoke ${Math.round(((a.wordCount - b.wordCount) / b.wordCount) * 100)}% more`
                 : a.wordCount < b.wordCount
@@ -370,7 +370,7 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
               rightValue={b.avgSentenceLength}
               unit=" words"
             />
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
               {a.avgSentenceLength > b.avgSentenceLength
                 ? `${a.name} uses more complex sentences`
                 : a.avgSentenceLength < b.avgSentenceLength
@@ -391,7 +391,7 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
               leftColor="bg-indigo-500 dark:bg-indigo-400"
               rightColor="bg-orange-500 dark:bg-orange-400"
             />
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
               {a.questionCount + b.questionCount} total questions in the debate
             </p>
           </InsightCard>
@@ -408,7 +408,7 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
               leftColor="bg-emerald-500 dark:bg-emerald-400"
               rightColor="bg-teal-500 dark:bg-teal-400"
             />
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
               {a.concessionCount + b.concessionCount === 0
                 ? 'Neither debater made concessions'
                 : `${a.concessionCount + b.concessionCount} concession(s) detected`}
@@ -420,20 +420,20 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
         {a && b && (
           <InsightCard icon={Sparkles} label="Rhetorical Devices">
             <div className="space-y-1.5">
-              <div className="flex justify-between text-[10px]">
+              <div className="flex justify-between text-xs">
                 <span className="text-gray-500 dark:text-gray-400">Anaphora (repetition)</span>
                 <span className="font-medium text-gray-700 dark:text-gray-200">
                   {a.name}: {a.anaphoraCount} &middot; {b.name}: {b.anaphoraCount}
                 </span>
               </div>
-              <div className="flex justify-between text-[10px]">
+              <div className="flex justify-between text-xs">
                 <span className="text-gray-500 dark:text-gray-400">Rhetorical questions</span>
                 <span className="font-medium text-gray-700 dark:text-gray-200">
                   {a.name}: {a.rhetoricalQuestionCount} &middot; {b.name}: {b.rhetoricalQuestionCount}
                 </span>
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
               {(a.anaphoraCount + a.rhetoricalQuestionCount) > (b.anaphoraCount + b.rhetoricalQuestionCount)
                 ? `${a.name} employs more rhetorical devices`
                 : (a.anaphoraCount + a.rhetoricalQuestionCount) < (b.anaphoraCount + b.rhetoricalQuestionCount)
@@ -450,9 +450,9 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
               {[a, b].map((debater) => (
                 <div key={debater.id} className="flex-1 text-center">
                   <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{debater.readingLevel}</div>
-                  <div className="text-[10px] text-gray-400 dark:text-gray-500">{debater.readingLabel}</div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500">{debater.readingLabel}</div>
                   <div className={clsx(
-                    'text-[10px] font-medium mt-0.5',
+                    'text-xs font-medium mt-0.5',
                     debater.role === 'proposition'
                       ? 'text-blue-600 dark:text-blue-400'
                       : 'text-rose-600 dark:text-rose-400',
@@ -462,7 +462,7 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 text-center">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 text-center">
               Flesch-Kincaid grade level estimate
             </p>
           </InsightCard>
@@ -481,13 +481,13 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
                 return (
                   <div key={debater.id} className="flex-1 text-center">
                     <span className={clsx(
-                      'inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold',
+                      'inline-block px-2 py-0.5 rounded-full text-xs font-semibold',
                       styleColors[debater.style],
                     )}>
                       {debater.style}
                     </span>
                     <div className={clsx(
-                      'text-[10px] font-medium mt-1',
+                      'text-xs font-medium mt-1',
                       debater.role === 'proposition'
                         ? 'text-blue-600 dark:text-blue-400'
                         : 'text-rose-600 dark:text-rose-400',
@@ -498,7 +498,7 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
                 );
               })}
             </div>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 text-center">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5 text-center">
               Based on rebuttal ratio and questioning patterns
             </p>
           </InsightCard>
@@ -519,11 +519,11 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-gray-700 dark:text-gray-200">
                   {turningPoint.speaker}
-                  <span className="ml-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+                  <span className="ml-1.5 text-xs text-gray-400 dark:text-gray-500">
                     momentum shift of {turningPoint.shift} points
                   </span>
                 </div>
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 leading-relaxed">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 leading-relaxed">
                   "{turningPoint.preview}..."
                 </p>
               </div>
@@ -543,19 +543,19 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
             <div className="grid grid-cols-4 gap-3 text-center">
               <div>
                 <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{a.wordCount}</div>
-                <div className="text-[10px] text-gray-400 dark:text-gray-500">Words</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500">Words</div>
               </div>
               <div>
                 <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{a.questionCount}</div>
-                <div className="text-[10px] text-gray-400 dark:text-gray-500">Questions</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500">Questions</div>
               </div>
               <div>
                 <div className="text-lg font-bold text-gray-800 dark:text-gray-100">{a.readingLevel}</div>
-                <div className="text-[10px] text-gray-400 dark:text-gray-500">{a.readingLabel}</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500">{a.readingLabel}</div>
               </div>
               <div>
                 <span className={clsx(
-                  'inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold mt-1',
+                  'inline-block px-2 py-0.5 rounded-full text-xs font-semibold mt-1',
                   a.style === 'Aggressive'
                     ? 'bg-red-100 text-red-700'
                     : a.style === 'Defensive'
@@ -564,7 +564,7 @@ export const DebateInsightsPanel: React.FC<DebateInsightsPanelProps> = ({ debate
                 )}>
                   {a.style}
                 </span>
-                <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Style</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Style</div>
               </div>
             </div>
           </InsightCard>

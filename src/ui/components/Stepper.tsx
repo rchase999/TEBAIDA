@@ -40,7 +40,7 @@ export const Stepper: React.FC<StepperProps> = ({ steps, currentStep, className 
                 {step.label}
               </span>
               {step.description && (
-                <span className="text-[10px] text-gray-400 dark:text-gray-500">{step.description}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{step.description}</span>
               )}
             </div>
             {!isLast && (

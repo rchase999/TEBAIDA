@@ -187,7 +187,7 @@ export const KonamiCode: React.FC<KonamiCodeProps> = ({ onRetroToggle }) => {
           </button>
 
           {/* Fun ASCII art */}
-          <pre className="mt-4 text-[10px] leading-tight text-gray-300 dark:text-surface-dark-4 font-mono select-none">
+          <pre className="mt-4 text-xs leading-tight text-gray-300 dark:text-surface-dark-4 font-mono select-none">
             {`  ↑ ↑ ↓ ↓ ← → ← → B A`}
           </pre>
         </div>

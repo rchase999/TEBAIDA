@@ -67,28 +67,28 @@ export const ArgumentHeatmap: React.FC<ArgumentHeatmapProps> = ({ debates, class
 
   return (
     <div className={clsx('', className)}>
-      <div className="flex gap-0.5">
+      <div className="flex gap-1">
         {/* Day labels */}
-        <div className="flex flex-col gap-0.5 pr-1">
+        <div className="flex flex-col gap-1 pr-1">
           {dayLabels.map((label, i) => (
             <div key={i} className="flex h-3 items-center">
-              <span className="text-[9px] text-gray-400 dark:text-gray-500 w-6 text-right">{label}</span>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500 w-6 text-right">{label}</span>
             </div>
           ))}
         </div>
 
         {/* Grid */}
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {grid.map((week, wIdx) => (
-            <div key={wIdx} className="flex flex-col gap-0.5">
+            <div key={wIdx} className="flex flex-col gap-1">
               {Array.from({ length: 7 }).map((_, dayIdx) => {
                 const cell = week.find((c) => c.dayOfWeek === dayIdx);
-                if (!cell) return <div key={dayIdx} className="h-3 w-3" />;
+                if (!cell) return <div key={dayIdx} className="h-4 w-4" />;
                 return (
                   <div
                     key={dayIdx}
                     className={clsx(
-                      'h-3 w-3 rounded-sm transition-all duration-200 hover:ring-1 hover:ring-forge-500 cursor-default',
+                      'h-4 w-4 rounded-sm transition-all duration-200 hover:ring-1 hover:ring-forge-500 cursor-default',
                       getCellColor(cell.count),
                     )}
                     title={`${cell.date}: ${cell.count} ${cell.count === 1 ? 'activity' : 'activities'}`}
@@ -101,13 +101,13 @@ export const ArgumentHeatmap: React.FC<ArgumentHeatmapProps> = ({ debates, class
       </div>
 
       {/* Legend */}
-      <div className="mt-2 flex items-center justify-end gap-1 text-[9px] text-gray-400 dark:text-gray-500">
+      <div className="mt-2 flex items-center justify-end gap-1 text-[11px] text-gray-400 dark:text-gray-500">
         <span>Less</span>
-        <div className="h-3 w-3 rounded-sm bg-gray-100 dark:bg-surface-dark-2" />
-        <div className="h-3 w-3 rounded-sm bg-forge-200 dark:bg-forge-900/40" />
-        <div className="h-3 w-3 rounded-sm bg-forge-300 dark:bg-forge-800/50" />
-        <div className="h-3 w-3 rounded-sm bg-forge-400 dark:bg-forge-700/60" />
-        <div className="h-3 w-3 rounded-sm bg-forge-600 dark:bg-forge-500" />
+        <div className="h-4 w-4 rounded-sm bg-gray-100 dark:bg-surface-dark-2" />
+        <div className="h-4 w-4 rounded-sm bg-forge-200 dark:bg-forge-900/40" />
+        <div className="h-4 w-4 rounded-sm bg-forge-300 dark:bg-forge-800/50" />
+        <div className="h-4 w-4 rounded-sm bg-forge-400 dark:bg-forge-700/60" />
+        <div className="h-4 w-4 rounded-sm bg-forge-600 dark:bg-forge-500" />
         <span>More</span>
       </div>
     </div>

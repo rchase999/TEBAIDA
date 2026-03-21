@@ -132,13 +132,13 @@ export const DebateFormatGuide: React.FC<DebateFormatGuideProps> = ({ format, cl
               const Icon = turn.icon;
               return (
                 <div key={turn.number} className="flex items-center gap-2.5">
-                  <span className="w-5 text-center text-[10px] font-bold tabular-nums text-gray-400 dark:text-gray-500">
+                  <span className="w-5 text-center text-xs font-bold tabular-nums text-gray-400 dark:text-gray-500">
                     {turn.number}
                   </span>
                   <Icon className={clsx('h-3.5 w-3.5 shrink-0', turn.color)} />
                   <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-20 shrink-0">{turn.role}</span>
-                  <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 w-16 shrink-0">{turn.phase}</span>
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{turn.description}</span>
+                  <span className="text-xs font-medium text-gray-400 dark:text-gray-500 w-16 shrink-0">{turn.phase}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate">{turn.description}</span>
                 </div>
               );
             })}
@@ -146,10 +146,10 @@ export const DebateFormatGuide: React.FC<DebateFormatGuideProps> = ({ format, cl
 
           {/* Tips */}
           <div className="rounded-lg bg-forge-50/50 p-3 dark:bg-forge-900/10">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-forge-600 dark:text-forge-400 mb-1.5">Tips</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-forge-600 dark:text-forge-400 mb-1.5">Tips</p>
             <ul className="space-y-1">
               {data.tips.map((tip, i) => (
-                <li key={i} className="flex items-start gap-1.5 text-[10px] text-gray-600 dark:text-gray-400">
+                <li key={i} className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400">
                   <span className="text-forge-500 mt-0.5">&#8226;</span>
                   {tip}
                 </li>

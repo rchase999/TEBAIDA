@@ -102,7 +102,7 @@ export const ModelInfoCard: React.FC<ModelInfoCardProps> = ({ modelId, className
       <p className="text-xs text-gray-500 dark:text-gray-400">{info.description}</p>
 
       {/* Stats */}
-      <div className="flex items-center gap-3 text-[10px]">
+      <div className="flex items-center gap-3 text-xs">
         <div className="flex items-center gap-1">
           <Zap className="h-3 w-3 text-gray-400" />
           <span className={speed.color}>{speed.label}</span>
@@ -120,13 +120,13 @@ export const ModelInfoCard: React.FC<ModelInfoCardProps> = ({ modelId, className
       {/* Strengths */}
       <div className="flex flex-wrap gap-1">
         {info.strengths.map((s) => (
-          <span key={s} className="rounded-full bg-forge-100 px-2 py-0.5 text-[9px] font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-400">
+          <span key={s} className="rounded-full bg-forge-100 px-2 py-0.5 text-xs font-medium text-forge-700 dark:bg-forge-900/30 dark:text-forge-400">
             {s}
           </span>
         ))}
       </div>
 
-      <p className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+      <p className="text-xs text-gray-400 dark:text-gray-500 italic">
         Best for: {info.bestFor}
       </p>
     </div>

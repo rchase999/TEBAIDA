@@ -43,7 +43,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
     <div className={clsx('group relative rounded-xl border border-gray-200 bg-gray-50 dark:border-surface-dark-3 dark:bg-surface-dark-2', className)}>
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2 dark:border-surface-dark-3">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
+        <span className="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
           {language}
         </span>
         {showCopy && (

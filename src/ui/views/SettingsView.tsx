@@ -462,7 +462,7 @@ const ThemePreviewCard: React.FC<{
         </div>
         <div className="text-left">
           <p className={clsx('text-sm font-semibold', isActive ? 'text-forge-600 dark:text-forge-400' : 'text-gray-700 dark:text-gray-300')}>{config.label}</p>
-          <p className="text-[10px] text-gray-400 dark:text-gray-500">{config.desc}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{config.desc}</p>
         </div>
       </div>
 
@@ -997,7 +997,7 @@ const SettingsView: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-tight">{tab.label}</p>
                     <p className={clsx(
-                      'text-[10px] leading-tight mt-0.5 truncate',
+                      'text-xs leading-tight mt-0.5 truncate',
                       isActive ? 'text-forge-500/70 dark:text-forge-400/60' : 'text-gray-400 dark:text-gray-500',
                     )}>{tab.description}</p>
                   </div>
@@ -1140,7 +1140,7 @@ const SettingsView: React.FC = () => {
                     <div className="flex items-end gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-600 text-[9px] font-bold text-white">OL</div>
+                          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-600 text-[11px] font-bold text-white">OL</div>
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Ollama</span>
                         </div>
                         <Input
@@ -1165,7 +1165,7 @@ const SettingsView: React.FC = () => {
                       <div className="flex items-end gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1.5">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-600 text-[9px] font-bold text-white">LM</div>
+                            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-600 text-[11px] font-bold text-white">LM</div>
                             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">LM Studio</span>
                           </div>
                           <Input
@@ -1263,7 +1263,7 @@ const SettingsView: React.FC = () => {
                           )}
                         </div>
                         <span className={clsx(
-                          'text-[10px] font-medium',
+                          'text-xs font-medium',
                           isSelected ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500',
                         )}>{color.name}</span>
                       </button>
@@ -1583,7 +1583,7 @@ const SettingsView: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="flex flex-col items-center">
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">Start</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 mb-1">Start</span>
                           <input
                             type="time"
                             value={quietHoursStart}
@@ -1593,7 +1593,7 @@ const SettingsView: React.FC = () => {
                         </div>
                         <span className="text-gray-400 dark:text-gray-500 mt-3">-</span>
                         <div className="flex flex-col items-center">
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">End</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500 mb-1">End</span>
                           <input
                             type="time"
                             value={quietHoursEnd}
@@ -2005,7 +2005,7 @@ const SettingsView: React.FC = () => {
                       <link.icon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                       <div>
                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{link.label}</p>
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500">{link.desc}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{link.desc}</p>
                       </div>
                     </button>
                   ))}

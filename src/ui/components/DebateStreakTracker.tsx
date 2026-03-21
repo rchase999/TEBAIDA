@@ -163,14 +163,14 @@ export const DebateStreakTracker: React.FC<DebateStreakTrackerProps> = ({ debate
           <Flame className={clsx('h-5 w-5', currentStreak > 0 ? 'text-orange-500' : 'text-gray-400')} />
           <div>
             <p className="text-lg font-bold tabular-nums text-gray-900 dark:text-gray-100">{currentStreak}</p>
-            <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Current Streak</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Current Streak</p>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2.5 dark:bg-amber-900/20">
           <Trophy className={clsx('h-5 w-5', longestStreak > 0 ? 'text-amber-500' : 'text-gray-400')} />
           <div>
             <p className="text-lg font-bold tabular-nums text-gray-900 dark:text-gray-100">{longestStreak}</p>
-            <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Best Streak</p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Best Streak</p>
           </div>
         </div>
       </div>
@@ -192,20 +192,20 @@ export const DebateStreakTracker: React.FC<DebateStreakTrackerProps> = ({ debate
             >
               <div className="flex items-center gap-2 mb-1.5">
                 <div className={clsx('flex h-7 w-7 items-center justify-center rounded-lg', a.bgColor)}>
-                  <Icon className={clsx('h-3.5 w-3.5', a.color)} />
+                  <Icon className={clsx('h-4 w-4', a.color)} />
                 </div>
                 <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">{a.name}</span>
               </div>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-1.5">{a.description}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">{a.description}</p>
               <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-surface-dark-3">
                 <div
                   className={clsx('h-full rounded-full transition-all duration-500', a.unlocked ? 'bg-emerald-500' : 'bg-forge-500')}
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="mt-1 text-[9px] tabular-nums text-gray-400 dark:text-gray-500">{a.progress}/{a.target}</p>
+              <p className="mt-1 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{a.progress}/{a.target}</p>
               {a.unlocked && (
-                <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white shadow-sm">
+                <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs text-white shadow-sm">
                   &#10003;
                 </div>
               )}

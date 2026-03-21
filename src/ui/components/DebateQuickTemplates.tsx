@@ -133,7 +133,7 @@ export const DebateQuickTemplates: React.FC<DebateQuickTemplatesProps> = ({ onSe
             </div>
             <div>
               <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">{template.title}</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">{template.category}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{template.category}</p>
             </div>
           </button>
         );

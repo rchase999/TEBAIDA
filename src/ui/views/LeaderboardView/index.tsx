@@ -876,7 +876,7 @@ const LeaderboardView: React.FC = () => {
                               <div className="mt-0.5 flex items-center gap-2">
                                 <span
                                   className={clsx(
-                                    'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize',
+                                    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
                                     provTheme.bg,
                                     provTheme.text,
                                   )}
@@ -907,7 +907,7 @@ const LeaderboardView: React.FC = () => {
                                   style={{ width: `${eloBarWidth(entry.elo, maxElo, minElo)}%` }}
                                 />
                               </div>
-                              <div className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                              <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
                                 {eloTierLabel(entry.elo)}
                               </div>
                             </div>
@@ -1037,7 +1037,7 @@ const LeaderboardView: React.FC = () => {
                           {h2hModelARating && (
                             <span
                               className={clsx(
-                                'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize',
+                                'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
                                 getProviderTheme(h2hModelARating.provider).bg,
                                 getProviderTheme(h2hModelARating.provider).text,
                               )}
@@ -1084,7 +1084,7 @@ const LeaderboardView: React.FC = () => {
                           <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
                             {h2hResult.totalMatches}
                           </p>
-                          <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                          <p className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500">
                             Match{h2hResult.totalMatches !== 1 ? 'es' : ''}
                           </p>
                         </div>
@@ -1093,14 +1093,14 @@ const LeaderboardView: React.FC = () => {
                             <p className="text-sm font-bold text-gray-500 dark:text-gray-400">
                               {h2hResult.draws}
                             </p>
-                            <p className="text-[10px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                            <p className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500">
                               Draw{h2hResult.draws !== 1 ? 's' : ''}
                             </p>
                           </div>
                         )}
                         <div className="flex items-center gap-1 mt-1">
                           <Clock className="h-3 w-3 text-gray-400" />
-                          <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
                             {relativeTime(h2hResult.lastPlayed)}
                           </p>
                         </div>
@@ -1140,7 +1140,7 @@ const LeaderboardView: React.FC = () => {
                           {h2hModelBRating && (
                             <span
                               className={clsx(
-                                'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize',
+                                'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold capitalize',
                                 getProviderTheme(h2hModelBRating.provider).bg,
                                 getProviderTheme(h2hModelBRating.provider).text,
                               )}

@@ -71,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
           {currentDebateTopic && currentView === 'debate' && (
             <>
-              <ChevronRight className="h-3.5 w-3.5 text-gray-300 dark:text-surface-dark-4 shrink-0" />
+              <ChevronRight className="h-4 w-4 text-gray-300 dark:text-surface-dark-4 shrink-0" />
               <span className="truncate text-gray-900 dark:text-gray-100 font-medium max-w-xs">
                 {currentDebateTopic}
               </span>
@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Search className="h-3.5 w-3.5" />
             <span>Search</span>
-            <kbd className="flex items-center gap-0.5 rounded border border-gray-300 bg-white px-1 py-0.5 text-[10px] font-medium text-gray-400 dark:border-surface-dark-4 dark:bg-surface-dark-3 dark:text-gray-500">
+            <kbd className="flex items-center gap-0.5 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-medium text-gray-400 dark:border-surface-dark-4 dark:bg-surface-dark-3 dark:text-gray-500">
               <span className="text-xs">&#8984;</span>K
             </kbd>
           </button>

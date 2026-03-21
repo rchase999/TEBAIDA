@@ -85,17 +85,17 @@ export const DebateShareCard: React.FC<DebateShareCardProps> = ({ debate, classN
           <div className="rounded-lg bg-white/10 p-2.5 text-center">
             <MessageSquare className="mx-auto h-4 w-4 text-white/60 mb-1" />
             <p className="text-lg font-bold">{turnCount}</p>
-            <p className="text-[10px] text-white/60">Turns</p>
+            <p className="text-xs text-white/60">Turns</p>
           </div>
           <div className="rounded-lg bg-white/10 p-2.5 text-center">
             <AlertTriangle className="mx-auto h-4 w-4 text-white/60 mb-1" />
             <p className="text-lg font-bold">{fallacyCount}</p>
-            <p className="text-[10px] text-white/60">Fallacies</p>
+            <p className="text-xs text-white/60">Fallacies</p>
           </div>
           <div className="rounded-lg bg-white/10 p-2.5 text-center">
             <Trophy className="mx-auto h-4 w-4 text-white/60 mb-1" />
             <p className="text-lg font-bold capitalize">{debate.status}</p>
-            <p className="text-[10px] text-white/60">Status</p>
+            <p className="text-xs text-white/60">Status</p>
           </div>
         </div>
 

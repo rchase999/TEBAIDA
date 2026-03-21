@@ -268,7 +268,7 @@ export const DebateRewindSlider: React.FC<DebateRewindSliderProps> = ({
           <>
             <span
               className={clsx(
-                'inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide',
+                'inline-block px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide',
                 (hoveredMeta ?? currentMeta).role === 'proposition'
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                   : (hoveredMeta ?? currentMeta).role === 'opposition'

@@ -129,7 +129,7 @@ export const ModelComparisonChart: React.FC<ModelComparisonChartProps> = ({ deba
                     style={{ width: `${(model.avgWords / maxWords) * 100}%` }}
                   />
                 </div>
-                <span className="text-[10px] tabular-nums text-gray-500 dark:text-gray-400 w-14 text-right">{model.avgWords} w</span>
+                <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400 w-14 text-right">{model.avgWords} w</span>
               </div>
 
               {/* Citations */}
@@ -141,7 +141,7 @@ export const ModelComparisonChart: React.FC<ModelComparisonChartProps> = ({ deba
                     style={{ width: `${(model.avgCitations / maxCitations) * 100}%` }}
                   />
                 </div>
-                <span className="text-[10px] tabular-nums text-gray-500 dark:text-gray-400 w-14 text-right">{model.avgCitations} cit</span>
+                <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400 w-14 text-right">{model.avgCitations} cit</span>
               </div>
 
               {/* Win rate */}
@@ -153,7 +153,7 @@ export const ModelComparisonChart: React.FC<ModelComparisonChartProps> = ({ deba
                     style={{ width: `${model.winRate}%` }}
                   />
                 </div>
-                <span className="text-[10px] tabular-nums text-gray-500 dark:text-gray-400 w-14 text-right">{model.winRate}% win</span>
+                <span className="text-xs tabular-nums text-gray-500 dark:text-gray-400 w-14 text-right">{model.winRate}% win</span>
               </div>
             </div>
           </div>

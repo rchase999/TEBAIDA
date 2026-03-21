@@ -13,7 +13,7 @@ export const WordCountBadge: React.FC<{ content: string; className?: string }> =
   return (
     <Tooltip content={`${count} words`}>
       <span className={clsx(
-        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:text-gray-500',
+        'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium text-gray-400 dark:text-gray-500',
         className,
       )}>
         <Type className="h-2.5 w-2.5" />

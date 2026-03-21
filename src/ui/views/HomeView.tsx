@@ -90,14 +90,14 @@ const QuickStat: React.FC<QuickStatProps> = ({ icon: Icon, label, value, trend, 
   >
     <div className="flex items-start justify-between">
       <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-sm font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{label}</p>
         <p className="mt-1 text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-100 animate-count-up">{value}</p>
         {trend && (
           <div className="mt-1 flex items-center gap-1">
             {trend.value >= 0 ? (
-              <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500" />
+              <ArrowUpRight className="h-4 w-4 text-emerald-500" />
             ) : (
-              <ArrowDownRight className="h-3.5 w-3.5 text-red-500" />
+              <ArrowDownRight className="h-4 w-4 text-red-500" />
             )}
             <span className={clsx('text-xs font-medium', trend.value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
               {Math.abs(trend.value)}% {trend.label}
@@ -692,7 +692,7 @@ const HomeView: React.FC = () => {
                       <span className={clsx('w-5 text-center text-xs font-bold', i === 0 ? 'text-amber-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-amber-700' : 'text-gray-400')}>
                         {i + 1}
                       </span>
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-[10px] font-bold text-gray-500 dark:bg-surface-dark-3 dark:text-gray-400">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500 dark:bg-surface-dark-3 dark:text-gray-400">
                         {m.name.charAt(0)}
                       </div>
                       <span className="flex-1 truncate text-sm font-medium text-gray-700 dark:text-gray-300">{m.name}</span>

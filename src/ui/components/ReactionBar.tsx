@@ -49,7 +49,7 @@ const ReactionBar: React.FC<ReactionBarProps> = ({ turnId, counts, onReact, comp
             aria-label={`${label}${count > 0 ? ` (${count})` : ''}`}
             onClick={(e) => handleClick(emoji, e)}
             className={clsx(
-              'inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-xs transition-all duration-150',
+              'inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs transition-all duration-150',
               'hover:scale-110 active:scale-95',
               count > 0
                 ? 'border-gray-300 bg-gray-100 dark:border-surface-dark-4 dark:bg-surface-dark-2'
@@ -58,7 +58,7 @@ const ReactionBar: React.FC<ReactionBarProps> = ({ turnId, counts, onReact, comp
           >
             <span className={clsx(compact ? 'text-sm' : 'text-base')}>{emoji}</span>
             {count > 0 && (
-              <span className="text-[10px] font-medium tabular-nums text-gray-600 dark:text-gray-400">
+              <span className="text-xs font-medium tabular-nums text-gray-600 dark:text-gray-400">
                 {count}
               </span>
             )}
@@ -84,7 +84,7 @@ export const ReactionSummary: React.FC<{ counts: ReactionCounts }> = ({ counts }
       {entries.map(([emoji, count]) => (
         <span key={emoji} className="inline-flex items-center gap-0.5 text-xs text-gray-500 dark:text-gray-400">
           <span className="text-xs">{emoji}</span>
-          <span className="text-[10px] tabular-nums">{count}</span>
+          <span className="text-xs tabular-nums">{count}</span>
         </span>
       ))}
     </span>

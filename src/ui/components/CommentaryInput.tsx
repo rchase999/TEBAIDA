@@ -94,10 +94,10 @@ export const CommentBubble: React.FC<{ comment: UserComment }> = ({ comment }) =
   <div className="flex justify-end animate-fade-in">
     <div className="max-w-[70%] rounded-xl rounded-br-sm bg-gray-200 px-3 py-2 dark:bg-surface-dark-3">
       <div className="flex items-center gap-1.5 mb-0.5">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           You
         </span>
-        <span className="text-[10px] text-gray-400 dark:text-gray-500">
+        <span className="text-xs text-gray-400 dark:text-gray-500">
           {new Date(comment.timestamp).toLocaleTimeString()}
         </span>
       </div>

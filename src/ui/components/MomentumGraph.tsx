@@ -123,7 +123,7 @@ export const MomentumGraph: React.FC<MomentumGraphProps> = ({ points, totalSteps
           <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             Argument Momentum
           </h4>
-          <div className="flex items-center gap-3 text-[10px] text-gray-400 dark:text-gray-500">
+          <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
             <span className="flex items-center gap-1">
               <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
               Proposition

@@ -462,7 +462,7 @@ export const DebateRules: React.FC<DebateRulesProps> = ({
         <button
           onClick={() => setIsCompact((c) => !c)}
           className={clsx(
-            'px-2.5 py-1 rounded-lg text-[10px] font-medium transition-colors',
+            'px-2.5 py-1 rounded-lg text-xs font-medium transition-colors',
             'border border-gray-200 dark:border-surface-dark-3',
             'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-dark-2',
           )}
@@ -487,12 +487,12 @@ export const DebateRules: React.FC<DebateRulesProps> = ({
                 </div>
                 <ul className="space-y-1">
                   {section.items.slice(0, 3).map((item, i) => (
-                    <li key={i} className="text-[10px] text-gray-500 dark:text-gray-400 leading-snug truncate">
+                    <li key={i} className="text-xs text-gray-500 dark:text-gray-400 leading-snug truncate">
                       {item}
                     </li>
                   ))}
                   {section.items.length > 3 && (
-                    <li className="text-[10px] text-gray-400 dark:text-gray-500 italic">
+                    <li className="text-xs text-gray-400 dark:text-gray-500 italic">
                       +{section.items.length - 3} more...
                     </li>
                   )}

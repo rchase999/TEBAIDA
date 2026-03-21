@@ -18,9 +18,9 @@ const PROVIDER_STYLES: Record<string, { bg: string; text: string; label: string 
 };
 
 const sizeStyles: Record<NonNullable<ModelProviderBadgeProps['size']>, string> = {
-  xs: 'px-1 py-0.5 text-[9px]',
-  sm: 'px-1.5 py-0.5 text-[10px]',
-  md: 'px-2 py-1 text-xs',
+  xs: 'px-1.5 py-0.5 text-[11px]',
+  sm: 'px-2 py-0.5 text-xs',
+  md: 'px-2.5 py-1 text-xs',
 };
 
 export const ModelProviderBadge: React.FC<ModelProviderBadgeProps> = ({

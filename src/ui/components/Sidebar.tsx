@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="block text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
                 DebateForge
               </span>
-              <span className="block text-[10px] font-medium text-gray-400 dark:text-gray-500">
+              <span className="block text-xs font-medium text-gray-400 dark:text-gray-500">
                 AI Debate Arena
               </span>
             </div>
@@ -150,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Search className="h-4 w-4 shrink-0" />
             <span className="flex-1 text-left">Search...</span>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:border-surface-dark-4 dark:bg-surface-dark-3 dark:text-gray-500">
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-gray-300 bg-white px-1.5 py-0.5 text-xs font-medium text-gray-400 dark:border-surface-dark-4 dark:bg-surface-dark-3 dark:text-gray-500">
               <span className="text-xs">&#8984;</span>K
             </kbd>
           </button>
@@ -175,7 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div key={section.title} className={clsx(sIdx > 0 && 'mt-4')}>
             {/* Section header */}
             {!collapsed && (
-              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
                 {section.title}
               </p>
             )}
@@ -216,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span className="ml-3 truncate">{item.label}</span>
                         {item.badge && (
                           <span className={clsx(
-                            'ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+                            'ml-auto rounded-full px-1.5 py-0.5 text-xs font-semibold',
                             item.badgeColor || 'text-forge-600 bg-forge-100 dark:text-forge-400 dark:bg-forge-900/30',
                           )}>
                             {item.badge}
@@ -237,10 +237,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Quick links */}
         {!collapsed && (
           <div className="flex items-center gap-1 px-1 mb-1">
-            <button onClick={() => onViewChange('about')} className="flex-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
+            <button onClick={() => onViewChange('about')} className="flex-1 rounded-md px-2 py-1 text-xs font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
               About
             </button>
-            <button onClick={() => onViewChange('changelog')} className="flex-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
+            <button onClick={() => onViewChange('changelog')} className="flex-1 rounded-md px-2 py-1 text-xs font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
               Changelog
             </button>
           </div>

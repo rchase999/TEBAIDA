@@ -264,7 +264,7 @@ const LOCAL_COLORS = ['#059669', '#7C3AED', '#DC2626', '#0891B2', '#CA8A04', '#B
 const ProviderPill: React.FC<{ provider: string }> = ({ provider }) => {
   const colors = PROVIDER_COLORS[provider] ?? { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-400' };
   return (
-    <span className={clsx('inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none', colors.bg, colors.text)}>
+    <span className={clsx('inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium leading-none', colors.bg, colors.text)}>
       {provider}
     </span>
   );

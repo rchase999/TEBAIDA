@@ -135,7 +135,7 @@ export const DebateSummaryGenerator: React.FC<DebateSummaryGeneratorProps> = ({
           <p className="text-xs text-gray-500 dark:text-gray-400">Words</p>
           <div className="flex items-center justify-center gap-2 mt-0.5">
             <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{summary.propWords}</span>
-            <span className="text-[10px] text-gray-400">vs</span>
+            <span className="text-xs text-gray-400">vs</span>
             <span className="text-sm font-bold text-rose-600 dark:text-rose-400">{summary.oppWords}</span>
           </div>
         </div>
@@ -143,7 +143,7 @@ export const DebateSummaryGenerator: React.FC<DebateSummaryGeneratorProps> = ({
           <p className="text-xs text-gray-500 dark:text-gray-400">Citations</p>
           <div className="flex items-center justify-center gap-2 mt-0.5">
             <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{summary.propCitations}</span>
-            <span className="text-[10px] text-gray-400">vs</span>
+            <span className="text-xs text-gray-400">vs</span>
             <span className="text-sm font-bold text-rose-600 dark:text-rose-400">{summary.oppCitations}</span>
           </div>
         </div>
@@ -151,7 +151,7 @@ export const DebateSummaryGenerator: React.FC<DebateSummaryGeneratorProps> = ({
           <p className="text-xs text-gray-500 dark:text-gray-400">Fallacies</p>
           <div className="flex items-center justify-center gap-2 mt-0.5">
             <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{summary.propFallacies}</span>
-            <span className="text-[10px] text-gray-400">vs</span>
+            <span className="text-xs text-gray-400">vs</span>
             <span className="text-sm font-bold text-rose-600 dark:text-rose-400">{summary.oppFallacies}</span>
           </div>
         </div>
@@ -163,13 +163,13 @@ export const DebateSummaryGenerator: React.FC<DebateSummaryGeneratorProps> = ({
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Key Arguments</p>
           {summary.propKeyArg && (
             <div className="rounded-lg border-l-2 border-blue-400 bg-blue-50/50 px-3 py-2 dark:bg-blue-900/10">
-              <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mb-0.5">{summary.propName}</p>
+              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-0.5">{summary.propName}</p>
               <p className="text-xs text-gray-700 dark:text-gray-300 italic line-clamp-2">&ldquo;{summary.propKeyArg}&rdquo;</p>
             </div>
           )}
           {summary.oppKeyArg && (
             <div className="rounded-lg border-l-2 border-rose-400 bg-rose-50/50 px-3 py-2 dark:bg-rose-900/10">
-              <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 mb-0.5">{summary.oppName}</p>
+              <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 mb-0.5">{summary.oppName}</p>
               <p className="text-xs text-gray-700 dark:text-gray-300 italic line-clamp-2">&ldquo;{summary.oppKeyArg}&rdquo;</p>
             </div>
           )}
@@ -187,7 +187,7 @@ export const DebateSummaryGenerator: React.FC<DebateSummaryGeneratorProps> = ({
       )}
 
       {/* Meta */}
-      <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 pt-1">
+      <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500 pt-1">
         <span>{summary.format} format</span>
         <span>{summary.totalTurns} turns</span>
       </div>

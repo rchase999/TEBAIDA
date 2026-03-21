@@ -123,13 +123,11 @@
     }
   }
 
-  /* Touch targets — ensure minimum 44x44px */
-  button, a, [role="button"], input, select, textarea {
-    min-height: var(--touch-target-min);
-  }
-  /* Allow small inline elements */
-  .compact-touch button, .compact-touch a, span > button, p > a {
-    min-height: auto;
+  /* Touch targets — desktop app, ensure reasonable click targets */
+  /* Applied via utility class rather than globally to avoid breaking compact UI */
+  .touch-target {
+    min-height: 36px;
+    min-width: 36px;
   }
 }
 

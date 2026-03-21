@@ -101,11 +101,11 @@ export const DebateTimeline: React.FC<DebateTimelineProps> = ({
                   <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">
                     {turn.debaterName}
                   </span>
-                  <span className={clsx('rounded-full px-1.5 py-0.5 text-[9px] font-medium', phaseColor)}>
+                  <span className={clsx('rounded-full px-1.5 py-0.5 text-xs font-medium', phaseColor)}>
                     {turn.phase}
                   </span>
                   {fallacyCount > 0 && (
-                    <span className="flex items-center gap-0.5 text-[9px] font-medium text-amber-600 dark:text-amber-400">
+                    <span className="flex items-center gap-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="h-2.5 w-2.5" /> {fallacyCount}
                     </span>
                   )}
@@ -113,13 +113,13 @@ export const DebateTimeline: React.FC<DebateTimelineProps> = ({
                 <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
                   {preview}{preview.length >= 80 ? '...' : ''}
                 </p>
-                <span className="text-[9px] text-gray-400 dark:text-gray-500">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
                   {wordCount} words
                 </span>
               </div>
 
               {/* Turn number */}
-              <span className="shrink-0 text-[10px] font-medium tabular-nums text-gray-400 dark:text-gray-500 pt-1">
+              <span className="shrink-0 text-xs font-medium tabular-nums text-gray-400 dark:text-gray-500 pt-1">
                 #{index + 1}
               </span>
             </button>

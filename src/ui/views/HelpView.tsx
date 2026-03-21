@@ -389,7 +389,7 @@ const HelpView: React.FC = () => {
                   <ol className="ml-1 space-y-2">
                     {item.steps.map((step, i) => (
                       <li key={i} className="flex items-start gap-2.5 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-                        <span className={clsx('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold', item.bgColor, item.color)}>
+                        <span className={clsx('mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold', item.bgColor, item.color)}>
                           {i + 1}
                         </span>
                         <span>{step}</span>
@@ -488,7 +488,7 @@ const HelpView: React.FC = () => {
                               {parts.map((part, j) => (
                                 <React.Fragment key={j}>
                                   {j > 0 && (
-                                    <span className="text-[10px] text-gray-400 dark:text-gray-500">+</span>
+                                    <span className="text-xs text-gray-400 dark:text-gray-500">+</span>
                                   )}
                                   <Keycap label={part} />
                                 </React.Fragment>

@@ -1015,7 +1015,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted, onExploreFeatur
                     <span className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <item.icon className="h-3.5 w-3.5" />
                       {item.label}
-                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:bg-surface-dark-3 dark:text-gray-500">
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-400 dark:bg-surface-dark-3 dark:text-gray-500">
                         Soon
                       </span>
                     </span>
@@ -1034,7 +1034,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted, onExploreFeatur
                   <li key={item}>
                     <span className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                       {item}
-                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:bg-surface-dark-3 dark:text-gray-500">
+                      <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-400 dark:bg-surface-dark-3 dark:text-gray-500">
                         Placeholder
                       </span>
                     </span>

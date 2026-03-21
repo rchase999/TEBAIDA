@@ -77,7 +77,7 @@ function CopyUrlButton({ url }: { url: string }) {
       {copied ? (
         <span className="flex items-center gap-0.5">
           <Check className="h-3 w-3 text-emerald-500" />
-          <span className="text-[10px] text-emerald-500">Copied!</span>
+          <span className="text-xs text-emerald-500">Copied!</span>
         </span>
       ) : (
         <Copy className="h-3 w-3" />
@@ -306,7 +306,7 @@ const EvidencePanel: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <p className="truncate text-gray-900 dark:text-gray-100">{cite.title || 'Untitled'}</p>
                       {isLowCredibility && (
-                        <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                           <AlertTriangle className="h-2.5 w-2.5" />
                           Low Credibility
                         </span>
@@ -329,7 +329,7 @@ const EvidencePanel: React.FC = () => {
                       <Badge size="sm" variant={sourceInfo.variant}>{sourceInfo.label}</Badge>
                       {cite.verified && <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />}
                     </div>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 max-w-[140px] text-right leading-tight">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 max-w-[140px] text-right leading-tight">
                       {sourceInfo.description}
                     </span>
                   </div>
