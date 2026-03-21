@@ -47,14 +47,26 @@ export default {
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
+        '144': '36rem',
+        '160': '40rem',
       },
       borderRadius: {
         '4xl': '2rem',
+        '5xl': '2.5rem',
       },
       boxShadow: {
         'glow': '0 0 20px rgba(92, 124, 250, 0.15)',
         'glow-lg': '0 0 40px rgba(92, 124, 250, 0.2)',
+        'glow-xl': '0 0 60px rgba(92, 124, 250, 0.25)',
         'inner-sm': 'inset 0 1px 2px rgba(0, 0, 0, 0.06)',
+        'inner-md': 'inset 0 2px 4px rgba(0, 0, 0, 0.08)',
+        'card': '0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)',
+        'card-hover': '0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04)',
+        'elevated': '0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04)',
+        'modal': '0 25px 50px rgba(0, 0, 0, 0.12), 0 12px 24px rgba(0, 0, 0, 0.08)',
+      },
+      fontSize: {
+        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
@@ -74,6 +86,17 @@ export default {
         'count-up': 'countUp 0.6s ease-out',
         'gradient-shift': 'gradientShift 3s ease infinite',
         'float': 'float 6s ease-in-out infinite',
+        'float-slow': 'float 8s ease-in-out infinite',
+        'float-fast': 'float 4s ease-in-out infinite',
+        'wiggle': 'wiggle 1s ease-in-out infinite',
+        'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+        'slide-out-right': 'slideOutRight 0.3s ease-in forwards',
+        'slide-out-left': 'slideOutLeft 0.3s ease-in forwards',
+        'expand': 'expand 0.3s ease-out',
+        'collapse': 'collapse 0.3s ease-in',
+        'shake': 'shake 0.5s ease-in-out',
+        'typewriter': 'typewriter 3s steps(30) infinite',
+        'blink': 'blink 1s step-end infinite',
       },
       keyframes: {
         fadeIn: {
@@ -140,6 +163,40 @@ export default {
         float: {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-10px)' },
+        },
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(-3deg)' },
+          '50%': { transform: 'rotate(3deg)' },
+        },
+        slideOutRight: {
+          '0%': { opacity: '1', transform: 'translateX(0)' },
+          '100%': { opacity: '0', transform: 'translateX(20px)' },
+        },
+        slideOutLeft: {
+          '0%': { opacity: '1', transform: 'translateX(0)' },
+          '100%': { opacity: '0', transform: 'translateX(-20px)' },
+        },
+        expand: {
+          '0%': { maxHeight: '0', opacity: '0' },
+          '100%': { maxHeight: '500px', opacity: '1' },
+        },
+        collapse: {
+          '0%': { maxHeight: '500px', opacity: '1' },
+          '100%': { maxHeight: '0', opacity: '0' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
+          '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
+        },
+        typewriter: {
+          '0%': { width: '0' },
+          '50%': { width: '100%' },
+          '100%': { width: '0' },
+        },
+        blink: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
         },
       },
       backgroundImage: {

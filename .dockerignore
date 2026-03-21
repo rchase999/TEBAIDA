@@ -1,0 +1,10 @@
+node_modules
+dist
+release
+.git
+.env
+*.md
+.github
+coverage
+.vscode
+.idea

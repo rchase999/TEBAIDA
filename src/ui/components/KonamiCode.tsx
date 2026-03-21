@@ -107,7 +107,7 @@ export const KonamiCode: React.FC<KonamiCodeProps> = ({ onRetroToggle }) => {
   return (
     <>
       <ConfettiEffect
-        trigger={showConfetti}
+        active={showConfetti}
         onComplete={() => setShowConfetti(false)}
       />
 

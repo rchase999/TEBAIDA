@@ -1270,7 +1270,7 @@ const DebateView: React.FC = () => {
   return (
     <div className="flex h-full">
       {/* Confetti on debate completion */}
-      <ConfettiEffect trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
+      <ConfettiEffect active={showConfetti} onComplete={() => setShowConfetti(false)} />
 
       {/* Transcript pane */}
       <div className={clsx('flex flex-1 flex-col', showEvidencePanel ? 'w-[60%]' : 'w-full')}>

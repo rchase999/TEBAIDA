@@ -20,9 +20,11 @@ import {
   Sparkles,
   ChevronDown,
   Monitor,
+  History,
+  Library,
 } from 'lucide-react';
 
-export type AppView = 'home' | 'new-debate' | 'personas' | 'tournament' | 'leaderboard' | 'statistics' | 'settings' | 'profile' | 'about' | 'help' | 'changelog';
+export type AppView = 'home' | 'new-debate' | 'history' | 'personas' | 'tournament' | 'leaderboard' | 'statistics' | 'settings' | 'profile' | 'about' | 'help' | 'changelog';
 
 export interface SidebarProps {
   currentView: AppView;
@@ -52,6 +54,7 @@ const navSections: NavSection[] = [
     items: [
       { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
       { id: 'new-debate', label: 'New Debate', icon: Swords },
+      { id: 'history', label: 'History', icon: History },
     ],
   },
   {

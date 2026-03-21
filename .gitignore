@@ -9,6 +9,7 @@ out/
 # Environment
 .env
 .env.local
+.env.production
 .env.*.local
 
 # IDE
@@ -17,23 +18,31 @@ out/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
 
-# Testing
-coverage/
+# Debug
+*.pdb
 
 # Electron
 *.asar
 
-# OS
-desktop.ini
-ehthumbs.db
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Coverage
+coverage/
 
 # Temp
-*.tmp
-*.bak
+.tmp/
+.cache/

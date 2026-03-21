@@ -13,6 +13,7 @@ import LeaderboardView from './views/LeaderboardView/index';
 import StatisticsView from './views/StatisticsView';
 import { ToastContainer, useToast } from './components/Toast';
 import type { AppView as SidebarAppView } from './components/Sidebar';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy-load heavy components
 const CommandPalette = lazy(() => import('./components/CommandPalette'));
@@ -20,6 +21,8 @@ const KeyboardShortcutsModal = lazy(() => import('./components/KeyboardShortcuts
 const WhatsNewModal = lazy(() => import('./components/WhatsNewModal'));
 const FeedbackWidget = lazy(() => import('./components/FeedbackWidget'));
 const BackToTop = lazy(() => import('./components/BackToTop'));
+const OfflineIndicator = lazy(() => import('./components/OfflineIndicator'));
+const CookieConsent = lazy(() => import('./components/CookieConsent'));
 
 // Lazy-load new views
 const LandingView = lazy(() => import('./views/LandingView'));
@@ -28,6 +31,9 @@ const AboutView = lazy(() => import('./views/AboutView'));
 const HelpView = lazy(() => import('./views/HelpView'));
 const ChangelogView = lazy(() => import('./views/ChangelogView'));
 const NotFoundView = lazy(() => import('./views/NotFoundView'));
+const DebateHistoryView = lazy(() => import('./views/DebateHistoryView'));
+const DebateDetailView = lazy(() => import('./views/DebateDetailView'));
+const ErrorView = lazy(() => import('./views/ErrorView'));
 
 function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
   if (sidebarView === 'new-debate') return 'setup';
@@ -35,7 +41,8 @@ function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
 }
 
 function storeViewToSidebarView(storeView: string): SidebarAppView {
-  if (storeView === 'setup' || storeView === 'debate') return 'new-debate';
+  if (storeView === 'setup' || storeView === 'debate' || storeView === 'debateDetail') return 'new-debate';
+  if (storeView === 'error') return 'home';
   return storeView as SidebarAppView;
 }
 
@@ -136,10 +143,11 @@ export default function App() {
         return;
       }
 
-      // Cmd+1-7 - Navigate to views
+      // Cmd+1-9 - Navigate to views
       const viewMap: Record<string, string> = {
-        '1': 'home', '2': 'setup', '3': 'personas', '4': 'tournament',
-        '5': 'leaderboard', '6': 'statistics', '7': 'settings',
+        '1': 'home', '2': 'setup', '3': 'history', '4': 'personas',
+        '5': 'tournament', '6': 'leaderboard', '7': 'statistics',
+        '8': 'settings', '9': 'profile',
       };
       if (isMod && viewMap[e.key]) {
         e.preventDefault();
@@ -260,6 +268,24 @@ export default function App() {
             <ChangelogView />
           </Suspense>
         );
+      case 'history':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <DebateHistoryView />
+          </Suspense>
+        );
+      case 'debateDetail':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <DebateDetailView />
+          </Suspense>
+        );
+      case 'error':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <ErrorView />
+          </Suspense>
+        );
       default:
         return <HomeView />;
     }
@@ -267,6 +293,11 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50 dark:bg-surface-dark-0" data-theme={effective}>
+      {/* Skip to content — accessibility */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to content
+      </a>
+
       {/* Scroll progress bar */}
       {!isLanding && (
         <div className="fixed top-0 left-0 right-0 z-[60] h-0.5 bg-transparent">
@@ -316,9 +347,11 @@ export default function App() {
             if (bar) bar.style.width = `${Math.min(100, Math.max(0, progress || 0))}%`;
           }}
         >
-          <div className="h-full animate-fade-in">
-            {renderView()}
-          </div>
+          <ErrorBoundary>
+            <div className="h-full animate-fade-in">
+              {renderView()}
+            </div>
+          </ErrorBoundary>
         </main>
       </div>
 
@@ -368,6 +401,16 @@ export default function App() {
 
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Offline indicator */}
+      <Suspense fallback={null}>
+        <OfflineIndicator />
+      </Suspense>
+
+      {/* Cookie/storage consent */}
+      <Suspense fallback={null}>
+        <CookieConsent />
+      </Suspense>
 
       {/* Konami code easter egg listener */}
       <KonamiListener />
