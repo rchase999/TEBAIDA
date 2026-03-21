@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { Swords } from 'lucide-react';
-
-const LOADING_MESSAGES = [
-  'Sharpening arguments...',
-  'Calibrating rhetoric engines...',
-  'Loading debate protocols...',
-  'Preparing the arena...',
-  'Warming up AI models...',
-  'Counting logical fallacies...',
-  'Organizing evidence...',
-  'Setting up the podium...',
-];
+import { LOADING_MESSAGES } from './LoadingMessages';
 
 export interface LoadingScreenProps {
   onComplete?: () => void;

@@ -17,6 +17,10 @@
     "package:linux": "electron-builder --linux",
     "package:all": "electron-builder --win --mac --linux",
     "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
+    "clean": "rm -rf dist release coverage",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {

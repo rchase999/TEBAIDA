@@ -75,6 +75,8 @@ const navSections: NavSection[] = [
     title: 'Account',
     items: [
       { id: 'profile', label: 'My Profile', icon: User },
+      { id: 'settings', label: 'Settings', icon: Settings },
+      { id: 'help', label: 'Help & Docs', icon: HelpCircle },
     ],
   },
 ];
@@ -232,12 +234,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Bottom section */}
       <div className="border-t border-gray-200/60 px-2 py-2 dark:border-surface-dark-3/60">
-        {/* Help & About links */}
+        {/* Quick links */}
         {!collapsed && (
           <div className="flex items-center gap-1 px-1 mb-1">
-            <button onClick={() => onViewChange('help')} className="flex-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
-              Help
-            </button>
             <button onClick={() => onViewChange('about')} className="flex-1 rounded-md px-2 py-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-surface-dark-2 transition-colors">
               About
             </button>
@@ -246,22 +245,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
         )}
-
-        {/* Settings */}
-        <button
-          onClick={() => onViewChange('settings')}
-          className={clsx(
-            'flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
-            currentView === 'settings'
-              ? 'bg-forge-600/10 text-forge-600 dark:bg-forge-500/15 dark:text-forge-400'
-              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-surface-dark-2 dark:hover:text-gray-200',
-            collapsed && 'justify-center px-2',
-          )}
-          title={collapsed ? 'Settings' : undefined}
-        >
-          <Settings className="h-[18px] w-[18px] shrink-0" />
-          {!collapsed && <span className="ml-3">Settings</span>}
-        </button>
 
         {/* Theme toggle */}
         <button

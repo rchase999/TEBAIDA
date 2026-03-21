@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import * as path from 'path';
-import { initDatabase } from './database';
+import { initDatabase, getDbHealth } from './database';
 
 // Simple JSON file store (electron-store v10 has ESM issues in CJS context)
 import * as fs from 'fs';
@@ -117,6 +117,14 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('get-app-path', (): string => {
     return app.getPath('userData');
+  });
+
+  ipcMain.handle('get-db-health', () => {
+    try {
+      return getDbHealth();
+    } catch {
+      return { status: 'error', debates: 0, turns: 0, size: '0 KB' };
+    }
   });
 }
 

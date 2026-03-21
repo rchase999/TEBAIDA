@@ -13,6 +13,7 @@ import {
   BarChart3, Github, Bug, Lightbulb, Scale,
   Heart, Package, ArrowRight, RotateCcw,
   Users, MessageSquare, Hash, Activity,
+  Bell, BellOff, Search,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { useTheme } from '../themes';
@@ -27,7 +28,7 @@ import type { ModelProvider, DebateFormat } from '../../types';
    Constants
    ============================================================ */
 
-type SettingsTab = 'general' | 'api-keys' | 'appearance' | 'debates' | 'data' | 'about';
+type SettingsTab = 'general' | 'api-keys' | 'appearance' | 'debates' | 'data' | 'about' | 'notifications' | 'privacy' | 'shortcuts';
 
 interface TabDef {
   id: SettingsTab;
@@ -41,6 +42,9 @@ const TABS: TabDef[] = [
   { id: 'api-keys', label: 'API Keys', icon: Key, description: 'Provider credentials' },
   { id: 'appearance', label: 'Appearance', icon: Paintbrush, description: 'Theme, colors & layout' },
   { id: 'debates', label: 'Debates', icon: Swords, description: 'Debate defaults & features' },
+  { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts, sounds & preferences' },
+  { id: 'privacy', label: 'Privacy', icon: Shield, description: 'Data & privacy preferences' },
+  { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: Keyboard, description: 'View all shortcuts' },
   { id: 'data', label: 'Data', icon: HardDrive, description: 'Storage, export & import' },
   { id: 'about', label: 'About', icon: Info, description: 'Version & credits' },
 ];
@@ -110,6 +114,55 @@ const SHORTCUTS = [
   { keys: ['Escape'], action: 'Close modal / cancel' },
   { keys: ['Ctrl', '?'], action: 'Show all shortcuts' },
 ];
+
+/* ------- Full keyboard shortcuts for dedicated tab ------- */
+
+interface ShortcutEntry {
+  keys: string[];
+  action: string;
+  category: 'Navigation' | 'Debate' | 'General' | 'Views';
+}
+
+const FULL_SHORTCUTS: ShortcutEntry[] = [
+  // Navigation
+  { keys: ['Ctrl', 'K'], action: 'Open command palette', category: 'Navigation' },
+  { keys: ['Ctrl', '/'], action: 'Toggle sidebar', category: 'Navigation' },
+  { keys: ['Ctrl', ','], action: 'Open settings', category: 'Navigation' },
+  { keys: ['Ctrl', 'F'], action: 'Focus search bar', category: 'Navigation' },
+  { keys: ['Ctrl', 'P'], action: 'Quick switch panel', category: 'Navigation' },
+  { keys: ['Tab'], action: 'Next focusable element', category: 'Navigation' },
+  { keys: ['Shift', 'Tab'], action: 'Previous focusable element', category: 'Navigation' },
+  // Debate
+  { keys: ['Ctrl', 'N'], action: 'New debate', category: 'Debate' },
+  { keys: ['Ctrl', 'S'], action: 'Save current debate', category: 'Debate' },
+  { keys: ['Ctrl', 'Enter'], action: 'Send / continue debate', category: 'Debate' },
+  { keys: ['Ctrl', 'E'], action: 'Export debates', category: 'Debate' },
+  { keys: ['Ctrl', 'Shift', 'E'], action: 'Export as PDF', category: 'Debate' },
+  { keys: ['Ctrl', 'Shift', 'N'], action: 'New debate from template', category: 'Debate' },
+  { keys: ['Ctrl', 'Shift', 'R'], action: 'Restart current debate', category: 'Debate' },
+  { keys: ['Ctrl', 'J'], action: 'Toggle judge panel', category: 'Debate' },
+  // General
+  { keys: ['Ctrl', 'D'], action: 'Toggle dark mode', category: 'General' },
+  { keys: ['Ctrl', 'Shift', 'T'], action: 'Toggle theme', category: 'General' },
+  { keys: ['Escape'], action: 'Close modal / cancel', category: 'General' },
+  { keys: ['?'], action: 'Keyboard shortcuts', category: 'General' },
+  { keys: ['Ctrl', 'Z'], action: 'Undo last action', category: 'General' },
+  { keys: ['Ctrl', 'Shift', 'Z'], action: 'Redo last action', category: 'General' },
+  { keys: ['Ctrl', '.'], action: 'Toggle compact mode', category: 'General' },
+  { keys: ['F11'], action: 'Toggle fullscreen', category: 'General' },
+  // Views
+  { keys: ['Ctrl', '1'], action: 'Go to Dashboard', category: 'Views' },
+  { keys: ['Ctrl', '2'], action: 'Go to Debates', category: 'Views' },
+  { keys: ['Ctrl', '3'], action: 'Go to Analytics', category: 'Views' },
+  { keys: ['Ctrl', '4'], action: 'Go to Personas', category: 'Views' },
+  { keys: ['Ctrl', '5'], action: 'Go to Tournament', category: 'Views' },
+  { keys: ['Ctrl', '6'], action: 'Go to Topic Generator', category: 'Views' },
+  { keys: ['Ctrl', '7'], action: 'Go to History', category: 'Views' },
+  { keys: ['Ctrl', '8'], action: 'Go to Settings', category: 'Views' },
+  { keys: ['Ctrl', '9'], action: 'Go to About', category: 'Views' },
+];
+
+const SHORTCUT_CATEGORIES: ShortcutEntry['category'][] = ['Navigation', 'Debate', 'General', 'Views'];
 
 /* ============================================================
    Toast notification (inline, ephemeral)
@@ -516,6 +569,27 @@ const SettingsView: React.FC = () => {
   const [defaultPropositionModel, setDefaultPropositionModelState] = useState(() => getLocalPref('default-prop-model', 'anthropic'));
   const [defaultOppositionModel, setDefaultOppositionModelState] = useState(() => getLocalPref('default-opp-model', 'openai'));
 
+  // Notification preferences (localStorage)
+  const [notificationsEnabled, setNotificationsEnabledState] = useState(() => getLocalPref('notifications-enabled', 'true') === 'true');
+  const [soundEnabled, setSoundEnabledState] = useState(() => getLocalPref('sound-enabled', 'true') === 'true');
+  const [soundVolume, setSoundVolumeState] = useState(() => getLocalPref('sound-volume', 'medium'));
+  const [notifyDebateCompleted, setNotifyDebateCompletedState] = useState(() => getLocalPref('notify-debate-completed', 'true') === 'true');
+  const [notifyFallacyDetected, setNotifyFallacyDetectedState] = useState(() => getLocalPref('notify-fallacy-detected', 'true') === 'true');
+  const [notifyTurnCompleted, setNotifyTurnCompletedState] = useState(() => getLocalPref('notify-turn-completed', 'false') === 'true');
+  const [notifyTournamentUpdate, setNotifyTournamentUpdateState] = useState(() => getLocalPref('notify-tournament-update', 'true') === 'true');
+  const [notifyAchievement, setNotifyAchievementState] = useState(() => getLocalPref('notify-achievement', 'true') === 'true');
+  const [quietHoursEnabled, setQuietHoursEnabledState] = useState(() => getLocalPref('quiet-hours-enabled', 'false') === 'true');
+  const [quietHoursStart, setQuietHoursStartState] = useState(() => getLocalPref('quiet-hours-start', '22:00'));
+  const [quietHoursEnd, setQuietHoursEndState] = useState(() => getLocalPref('quiet-hours-end', '08:00'));
+
+  // Privacy preferences (localStorage)
+  const [analyticsEnabled, setAnalyticsEnabledState] = useState(() => getLocalPref('analytics-enabled', 'false') === 'true');
+  const [crashReportingEnabled, setCrashReportingEnabledState] = useState(() => getLocalPref('crash-reporting', 'false') === 'true');
+  const [dataRetention, setDataRetentionState] = useState(() => getLocalPref('data-retention', 'forever'));
+
+  // Keyboard shortcuts search
+  const [shortcutSearch, setShortcutSearch] = useState('');
+
   // Detect OS reduced motion
   const osReducedMotion = useMemo(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -541,6 +615,24 @@ const SettingsView: React.FC = () => {
   const setMomentumTracking = (v: boolean) => { setMomentumTrackingState(v); setLocalPref('momentum-tracking', String(v)); };
   const setDefaultPropositionModel = (v: string) => { setDefaultPropositionModelState(v); setLocalPref('default-prop-model', v); };
   const setDefaultOppositionModel = (v: string) => { setDefaultOppositionModelState(v); setLocalPref('default-opp-model', v); };
+
+  // Notification setters
+  const setNotificationsEnabled = (v: boolean) => { setNotificationsEnabledState(v); setLocalPref('notifications-enabled', String(v)); };
+  const setSoundEnabled = (v: boolean) => { setSoundEnabledState(v); setLocalPref('sound-enabled', String(v)); };
+  const setSoundVolume = (v: string) => { setSoundVolumeState(v); setLocalPref('sound-volume', v); };
+  const setNotifyDebateCompleted = (v: boolean) => { setNotifyDebateCompletedState(v); setLocalPref('notify-debate-completed', String(v)); };
+  const setNotifyFallacyDetected = (v: boolean) => { setNotifyFallacyDetectedState(v); setLocalPref('notify-fallacy-detected', String(v)); };
+  const setNotifyTurnCompleted = (v: boolean) => { setNotifyTurnCompletedState(v); setLocalPref('notify-turn-completed', String(v)); };
+  const setNotifyTournamentUpdate = (v: boolean) => { setNotifyTournamentUpdateState(v); setLocalPref('notify-tournament-update', String(v)); };
+  const setNotifyAchievement = (v: boolean) => { setNotifyAchievementState(v); setLocalPref('notify-achievement', String(v)); };
+  const setQuietHoursEnabled = (v: boolean) => { setQuietHoursEnabledState(v); setLocalPref('quiet-hours-enabled', String(v)); };
+  const setQuietHoursStart = (v: string) => { setQuietHoursStartState(v); setLocalPref('quiet-hours-start', v); };
+  const setQuietHoursEnd = (v: string) => { setQuietHoursEndState(v); setLocalPref('quiet-hours-end', v); };
+
+  // Privacy setters
+  const setAnalyticsEnabled = (v: boolean) => { setAnalyticsEnabledState(v); setLocalPref('analytics-enabled', String(v)); };
+  const setCrashReportingEnabled = (v: boolean) => { setCrashReportingEnabledState(v); setLocalPref('crash-reporting', String(v)); };
+  const setDataRetention = (v: string) => { setDataRetentionState(v); setLocalPref('data-retention', v); };
 
   /* ------ API key testing ------ */
   const handleTestConnection = useCallback(async (providerId: ModelProvider) => {
@@ -761,6 +853,82 @@ const SettingsView: React.FC = () => {
     setTimeout(() => window.location.reload(), 800);
   };
 
+  /* ------ Privacy actions ------ */
+  const handleClearDebateHistory = () => {
+    try { localStorage.removeItem('debateforge-debates'); } catch { /* noop */ }
+    showToast('Debate history cleared');
+    setTimeout(() => window.location.reload(), 800);
+  };
+
+  const handleClearSearchHistory = () => {
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('debateforge-search')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      showToast(`Cleared ${keysToRemove.length} search history item(s)`);
+    } catch {
+      showToast('Failed to clear search history', 'error');
+    }
+  };
+
+  const handleExportPersonalData = () => {
+    try {
+      const allData: Record<string, any> = {};
+      // Collect all localStorage data
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          const val = localStorage.getItem(key);
+          try {
+            allData[key] = JSON.parse(val!);
+          } catch {
+            allData[key] = val;
+          }
+        }
+      }
+      // Add store data
+      allData['__store_debates'] = debates;
+      allData['__store_personas'] = personas;
+      allData['__store_settings'] = settings;
+
+      const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `debateforge-personal-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Personal data exported successfully');
+    } catch {
+      showToast('Failed to export personal data', 'error');
+    }
+  };
+
+  /* ------ Desktop notification permission ------ */
+  const handleRequestNotificationPermission = async () => {
+    try {
+      if ('Notification' in window) {
+        const result = await Notification.requestPermission();
+        if (result === 'granted') {
+          showToast('Desktop notifications enabled');
+        } else if (result === 'denied') {
+          showToast('Desktop notifications denied by browser', 'error');
+        } else {
+          showToast('Desktop notification permission dismissed', 'info');
+        }
+      } else {
+        showToast('Desktop notifications not supported in this browser', 'error');
+      }
+    } catch {
+      showToast('Failed to request notification permission', 'error');
+    }
+  };
+
   /* ------ Computed ------ */
   const configuredKeyCount = PROVIDERS.filter((p) => {
     const k = (apiKeys as any)[p.id];
@@ -778,6 +946,23 @@ const SettingsView: React.FC = () => {
     { value: 'ollama', label: 'Ollama (Local)' },
     { value: 'lmstudio', label: 'LM Studio (Local)' },
   ];
+
+  // Filtered shortcuts for the shortcuts tab
+  const filteredShortcuts = useMemo(() => {
+    if (!shortcutSearch.trim()) return FULL_SHORTCUTS;
+    const q = shortcutSearch.toLowerCase();
+    return FULL_SHORTCUTS.filter(
+      (s) =>
+        s.action.toLowerCase().includes(q) ||
+        s.keys.join(' ').toLowerCase().includes(q) ||
+        s.category.toLowerCase().includes(q),
+    );
+  }, [shortcutSearch]);
+
+  const desktopNotificationStatus = useMemo(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
+    return Notification.permission;
+  }, []);
 
   /* ============================================================
      RENDER
@@ -1251,6 +1436,376 @@ const SettingsView: React.FC = () => {
                   />
                 </div>
               </Card>
+            </div>
+          )}
+
+          {/* ========== NOTIFICATIONS ========== */}
+          {activeTab === 'notifications' && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Master Toggle */}
+              <Card>
+                <SectionHeader icon={Bell} title="Notification Preferences" description="Control how and when you receive notifications." />
+                <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                  <Toggle
+                    label="Enable Notifications"
+                    description="Master toggle for all in-app notifications."
+                    checked={notificationsEnabled}
+                    onChange={setNotificationsEnabled}
+                    icon={notificationsEnabled ? Bell : BellOff}
+                  />
+                </div>
+              </Card>
+
+              {/* Sound Settings */}
+              <Card>
+                <SectionHeader icon={Volume2} title="Sound Effects" description="Audio feedback for debate events." />
+                <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                  <Toggle
+                    label="Sound Effects"
+                    description="Play sounds for debate events."
+                    checked={soundEnabled}
+                    onChange={setSoundEnabled}
+                    icon={soundEnabled ? Volume2 : VolumeX}
+                  />
+                  {soundEnabled && (
+                    <RadioGroup
+                      label="Sound Volume"
+                      description="Volume level for sound effects."
+                      value={soundVolume}
+                      onChange={setSoundVolume}
+                      options={[
+                        { value: 'low', label: 'Low' },
+                        { value: 'medium', label: 'Medium' },
+                        { value: 'high', label: 'High' },
+                      ]}
+                      icon={Volume2}
+                    />
+                  )}
+                </div>
+              </Card>
+
+              {/* Per-Event Toggles */}
+              <Card>
+                <SectionHeader icon={Bell} title="Event Notifications" description="Choose which events trigger notifications." />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+                  <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                    <Toggle
+                      label="Debate Completed"
+                      description="When a debate finishes all turns."
+                      checked={notifyDebateCompleted}
+                      onChange={setNotifyDebateCompleted}
+                      icon={CheckCircle}
+                    />
+                    <Toggle
+                      label="Fallacy Detected"
+                      description="When a logical fallacy is identified."
+                      checked={notifyFallacyDetected}
+                      onChange={setNotifyFallacyDetected}
+                      icon={AlertTriangle}
+                    />
+                    <Toggle
+                      label="Turn Completed"
+                      description="After each debater finishes a turn."
+                      checked={notifyTurnCompleted}
+                      onChange={setNotifyTurnCompleted}
+                      icon={ArrowRight}
+                    />
+                  </div>
+                  <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                    <Toggle
+                      label="Tournament Update"
+                      description="Progress updates during tournaments."
+                      checked={notifyTournamentUpdate}
+                      onChange={setNotifyTournamentUpdate}
+                      icon={BarChart3}
+                    />
+                    <Toggle
+                      label="Achievement Unlocked"
+                      description="When you earn a new achievement."
+                      checked={notifyAchievement}
+                      onChange={setNotifyAchievement}
+                      icon={Sparkles}
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Desktop Notifications */}
+              <Card>
+                <SectionHeader icon={Monitor} title="Desktop Notifications" description="System-level notification integration." />
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <Monitor className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Desktop Notification Permission</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {desktopNotificationStatus === 'granted'
+                          ? 'Desktop notifications are enabled.'
+                          : desktopNotificationStatus === 'denied'
+                            ? 'Desktop notifications were denied. Update in browser settings.'
+                            : desktopNotificationStatus === 'unsupported'
+                              ? 'Desktop notifications are not supported in this environment.'
+                              : 'Allow DebateForge to show desktop notifications.'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={desktopNotificationStatus === 'granted' ? 'outline' : 'primary'}
+                    size="sm"
+                    onClick={handleRequestNotificationPermission}
+                    disabled={desktopNotificationStatus === 'granted' || desktopNotificationStatus === 'unsupported'}
+                    icon={desktopNotificationStatus === 'granted' ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <Bell className="h-4 w-4" />}
+                  >
+                    {desktopNotificationStatus === 'granted' ? 'Enabled' : 'Enable'}
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Quiet Hours */}
+              <Card>
+                <SectionHeader icon={Clock} title="Quiet Hours" description="Suppress notifications during specific hours." />
+                <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                  <Toggle
+                    label="Enable Quiet Hours"
+                    description="Mute all notifications during the specified time window."
+                    checked={quietHoursEnabled}
+                    onChange={setQuietHoursEnabled}
+                    icon={Moon}
+                  />
+                  {quietHoursEnabled && (
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Schedule</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Notifications are muted during this window.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">Start</span>
+                          <input
+                            type="time"
+                            value={quietHoursStart}
+                            onChange={(e) => setQuietHoursStart(e.target.value)}
+                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-forge-500 focus:outline-none focus:ring-2 focus:ring-forge-500/20 dark:border-surface-dark-4 dark:bg-surface-dark-1 dark:text-gray-100"
+                          />
+                        </div>
+                        <span className="text-gray-400 dark:text-gray-500 mt-3">-</span>
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">End</span>
+                          <input
+                            type="time"
+                            value={quietHoursEnd}
+                            onChange={(e) => setQuietHoursEnd(e.target.value)}
+                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-forge-500 focus:outline-none focus:ring-2 focus:ring-forge-500/20 dark:border-surface-dark-4 dark:bg-surface-dark-1 dark:text-gray-100"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* ========== PRIVACY ========== */}
+          {activeTab === 'privacy' && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Trust Banner */}
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/40 dark:bg-emerald-900/10">
+                <div className="flex items-start gap-3">
+                  <Lock className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">Your data never leaves your device</p>
+                    <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
+                      All debates, settings, and personal data are stored locally on your machine. DebateForge does not collect, transmit, or store any of your data on external servers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Analytics & Reporting */}
+              <Card>
+                <SectionHeader icon={BarChart3} title="Analytics & Reporting" description="Control what usage data is collected." />
+                <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                  <Toggle
+                    label="Anonymous Usage Analytics"
+                    description="Help improve DebateForge by sharing anonymous usage data."
+                    checked={analyticsEnabled}
+                    onChange={setAnalyticsEnabled}
+                    icon={BarChart3}
+                  />
+                  <Toggle
+                    label="Crash Reporting"
+                    description="Automatically send anonymous crash reports to help fix bugs."
+                    checked={crashReportingEnabled}
+                    onChange={setCrashReportingEnabled}
+                    icon={Bug}
+                  />
+                </div>
+              </Card>
+
+              {/* Data Retention */}
+              <Card>
+                <SectionHeader icon={Database} title="Data Retention" description="Control how long your data is kept." />
+                <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                  <StyledSelect
+                    label="Data Retention Period"
+                    description="Automatically delete debates older than this period."
+                    value={dataRetention}
+                    onChange={setDataRetention}
+                    options={[
+                      { value: 'forever', label: 'Keep forever' },
+                      { value: '30', label: '30 days' },
+                      { value: '90', label: '90 days' },
+                      { value: '365', label: '1 year' },
+                    ]}
+                    icon={Calendar}
+                  />
+                </div>
+              </Card>
+
+              {/* Clear Data */}
+              <Card>
+                <SectionHeader icon={Trash2} title="Clear Data" description="Remove stored data from your device." />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-surface-dark-3 hover:border-gray-300 dark:hover:border-surface-dark-4 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
+                        <MessageSquare className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Clear Debate History</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Remove all saved debates from local storage.</p>
+                      </div>
+                    </div>
+                    <Button variant="danger" size="sm" onClick={handleClearDebateHistory} icon={<Trash2 className="h-4 w-4" />}>
+                      Clear
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-surface-dark-3 hover:border-gray-300 dark:hover:border-surface-dark-4 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                        <Search className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Clear Search History</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Remove all cached search queries and suggestions.</p>
+                      </div>
+                    </div>
+                    <Button variant="danger" size="sm" onClick={handleClearSearchHistory} icon={<Trash2 className="h-4 w-4" />}>
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Export Personal Data */}
+              <Card>
+                <SectionHeader icon={Download} title="Export Personal Data" description="Download all your data stored in DebateForge." />
+                <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-surface-dark-3 hover:border-gray-300 dark:hover:border-surface-dark-4 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                      <Download className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Export All Personal Data</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Download everything: debates, settings, preferences, and all localStorage data as a JSON file.
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleExportPersonalData} icon={<Download className="h-4 w-4" />}>
+                    Export JSON
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* ========== KEYBOARD SHORTCUTS ========== */}
+          {activeTab === 'shortcuts' && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Search */}
+              <Card>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <input
+                    type="text"
+                    value={shortcutSearch}
+                    onChange={(e) => setShortcutSearch(e.target.value)}
+                    placeholder="Search shortcuts..."
+                    className="w-full rounded-lg border border-gray-300 bg-white pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-forge-500 focus:outline-none focus:ring-2 focus:ring-forge-500/20 dark:border-surface-dark-4 dark:bg-surface-dark-1 dark:text-gray-100 dark:placeholder-gray-500"
+                  />
+                  {shortcutSearch && (
+                    <button
+                      onClick={() => setShortcutSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </Card>
+
+              {/* Shortcuts by category */}
+              {SHORTCUT_CATEGORIES.map((category) => {
+                const categoryShortcuts = filteredShortcuts.filter((s) => s.category === category);
+                if (categoryShortcuts.length === 0) return null;
+
+                const categoryIcon = {
+                  Navigation: ChevronRight,
+                  Debate: Swords,
+                  General: Sliders,
+                  Views: Monitor,
+                }[category];
+
+                return (
+                  <Card key={category}>
+                    <SectionHeader icon={categoryIcon} title={category} description={`${categoryShortcuts.length} shortcut${categoryShortcuts.length !== 1 ? 's' : ''}`} />
+                    <div className="divide-y divide-gray-100 dark:divide-surface-dark-3">
+                      {categoryShortcuts.map((sc) => (
+                        <div key={sc.action} className="flex items-center justify-between py-2.5">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{sc.action}</span>
+                          <div className="flex items-center gap-1 shrink-0 ml-4">
+                            {sc.keys.map((k, i) => (
+                              <React.Fragment key={`${sc.action}-${k}-${i}`}>
+                                {i > 0 && <span className="text-xs text-gray-300 dark:text-gray-600 mx-0.5">+</span>}
+                                <kbd className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs font-mono font-medium text-gray-600 shadow-sm dark:border-surface-dark-4 dark:bg-surface-dark-2 dark:text-gray-400 min-w-[28px]">
+                                  {k}
+                                </kbd>
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                );
+              })}
+
+              {/* No results */}
+              {filteredShortcuts.length === 0 && (
+                <Card>
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Search className="h-8 w-8 text-gray-300 dark:text-gray-600 mb-3" />
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No shortcuts found</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      Try a different search term like &ldquo;debate&rdquo; or &ldquo;navigate&rdquo;.
+                    </p>
+                  </div>
+                </Card>
+              )}
+
+              {/* Total count footer */}
+              {!shortcutSearch && (
+                <div className="text-center">
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {FULL_SHORTCUTS.length} keyboard shortcuts available
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

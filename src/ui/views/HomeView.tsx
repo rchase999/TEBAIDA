@@ -17,6 +17,7 @@ import { ArgumentHeatmap } from '../components/ArgumentHeatmap';
 import { OnboardingChecklist } from '../components/OnboardingChecklist';
 import { DebateAutoSuggestions } from '../components/DebateAutoSuggestions';
 import { Badge } from '../components/Badge';
+import { Sparkline, DonutChart, BarChart } from '../components/MiniChart';
 import type { Debate, DebateFormat, DebateStatus } from '../../types';
 
 const FORMAT_LABELS: Record<DebateFormat, string> = {
@@ -371,6 +372,64 @@ const HomeView: React.FC = () => {
               <QuickAction icon={Zap} label="Settings" onClick={() => setCurrentView('settings')} color="text-gray-600 dark:text-gray-400" bgColor="bg-gray-100 dark:bg-gray-800/50" />
             </div>
           </Card>
+
+          {/* Debate Analytics */}
+          {debates.length >= 3 && (() => {
+            // Sparkline: debate activity over the last 14 days
+            const sparklineData: number[] = [];
+            const now = Date.now();
+            for (let i = 13; i >= 0; i--) {
+              const dayStart = new Date(now - i * 86400000);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(dayStart.getTime() + 86400000);
+              const count = debates.filter((d) => {
+                const t = new Date(d.createdAt).getTime();
+                return t >= dayStart.getTime() && t < dayEnd.getTime();
+              }).length;
+              sparklineData.push(count);
+            }
+
+            // DonutChart: format distribution
+            const formatCounts: Record<string, number> = { 'Oxford Union': 0, 'Lincoln-Douglas': 0, 'Parliamentary': 0 };
+            debates.forEach((d) => {
+              const name = d.format?.name ?? 'Unknown';
+              if (name === 'oxford-union' || name === 'Oxford Union') formatCounts['Oxford Union']++;
+              else if (name === 'lincoln-douglas' || name === 'Lincoln-Douglas') formatCounts['Lincoln-Douglas']++;
+              else if (name === 'parliamentary' || name === 'Parliamentary') formatCounts['Parliamentary']++;
+            });
+            const donutSegments = [
+              { label: 'Oxford Union', value: formatCounts['Oxford Union'], color: '#6366f1' },
+              { label: 'Lincoln-Douglas', value: formatCounts['Lincoln-Douglas'], color: '#f59e0b' },
+              { label: 'Parliamentary', value: formatCounts['Parliamentary'], color: '#10b981' },
+            ].filter((s) => s.value > 0);
+
+            // BarChart: top 5 AI models by debate count
+            const modelCounts: Record<string, number> = {};
+            debates.forEach((d) => {
+              d.debaters.forEach((db) => {
+                if (db.position === 'housemaster') return;
+                const name = db.model?.displayName ?? db.model?.name ?? 'Unknown';
+                modelCounts[name] = (modelCounts[name] ?? 0) + 1;
+              });
+            });
+            const barData = Object.entries(modelCounts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5)
+              .map(([label, value]) => ({ label, value }));
+
+            return (
+              <Card className="!p-4">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Debate Analytics</h2>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                  <Sparkline data={sparklineData} title="Activity (14 days)" height={48} />
+                  <div className="flex justify-center">
+                    <DonutChart segments={donutSegments} title="Format Distribution" size={110} thickness={16} />
+                  </div>
+                  <BarChart data={barData} title="Top Models" />
+                </div>
+              </Card>
+            );
+          })()}
 
           {/* Debate History */}
           {debates.length > 0 && (
