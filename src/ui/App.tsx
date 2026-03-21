@@ -35,6 +35,15 @@ const DebateHistoryView = lazy(() => import('./views/DebateHistoryView'));
 const DebateDetailView = lazy(() => import('./views/DebateDetailView'));
 const ErrorView = lazy(() => import('./views/ErrorView'));
 
+// Auth views
+const SignUpView = lazy(() => import('./views/auth/SignUpView'));
+const SignInView = lazy(() => import('./views/auth/SignInView'));
+const ForgotPasswordView = lazy(() => import('./views/auth/ForgotPasswordView'));
+const EmailVerificationView = lazy(() => import('./views/auth/EmailVerificationView'));
+const TwoFactorSetupView = lazy(() => import('./views/auth/TwoFactorSetupView'));
+const TwoFactorVerifyView = lazy(() => import('./views/auth/TwoFactorVerifyView'));
+const AccountSecurityView = lazy(() => import('./views/auth/AccountSecurityView'));
+
 function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
   if (sidebarView === 'new-debate') return 'setup';
   return sidebarView;
@@ -42,7 +51,8 @@ function sidebarViewToStoreView(sidebarView: SidebarAppView): string {
 
 function storeViewToSidebarView(storeView: string): SidebarAppView {
   if (storeView === 'setup' || storeView === 'debate' || storeView === 'debateDetail') return 'new-debate';
-  if (storeView === 'error') return 'home';
+  if (storeView === 'error' || storeView === 'account-security') return 'settings';
+  if (storeView.startsWith('signin') || storeView.startsWith('signup') || storeView.startsWith('forgot') || storeView.startsWith('verify') || storeView.startsWith('2fa')) return 'home';
   return storeView as SidebarAppView;
 }
 
@@ -218,7 +228,8 @@ export default function App() {
     setCurrentView('home');
   }, [setCurrentView]);
 
-  const isLanding = currentView === 'landing';
+  const authViews = ['landing', 'signin', 'signup', 'forgot-password', 'verify-email', '2fa-setup', '2fa-verify'];
+  const isLanding = authViews.includes(currentView);
 
   const renderView = () => {
     switch (currentView) {
@@ -284,6 +295,48 @@ export default function App() {
         return (
           <Suspense fallback={<ViewLoader />}>
             <ErrorView />
+          </Suspense>
+        );
+      case 'signin':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <SignInView />
+          </Suspense>
+        );
+      case 'signup':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <SignUpView />
+          </Suspense>
+        );
+      case 'forgot-password':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <ForgotPasswordView />
+          </Suspense>
+        );
+      case 'verify-email':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <EmailVerificationView />
+          </Suspense>
+        );
+      case '2fa-setup':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <TwoFactorSetupView />
+          </Suspense>
+        );
+      case '2fa-verify':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <TwoFactorVerifyView />
+          </Suspense>
+        );
+      case 'account-security':
+        return (
+          <Suspense fallback={<ViewLoader />}>
+            <AccountSecurityView />
           </Suspense>
         );
       default:

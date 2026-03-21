@@ -39,7 +39,7 @@ declare global {
 // ---------------------------------------------------------------------------
 // View type
 // ---------------------------------------------------------------------------
-export type AppView = 'home' | 'debate' | 'setup' | 'personas' | 'settings' | 'tournament' | 'leaderboard' | 'statistics' | 'profile' | 'about' | 'help' | 'changelog' | 'landing' | 'history' | 'debateDetail' | 'error';
+export type AppView = 'home' | 'debate' | 'setup' | 'personas' | 'settings' | 'tournament' | 'leaderboard' | 'statistics' | 'profile' | 'about' | 'help' | 'changelog' | 'landing' | 'history' | 'debateDetail' | 'error' | 'signin' | 'signup' | 'forgot-password' | 'verify-email' | '2fa-setup' | '2fa-verify' | 'account-security';
 
 // ---------------------------------------------------------------------------
 // Theme type
